@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X, Upload } from "lucide-react";
+import { useState, useRef } from "react";
+import { X, Upload, Paperclip } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
 import type { Treatment, TreatmentFile } from "../../types";
@@ -12,6 +12,11 @@ interface Props {
   onSaved: () => void;
 }
 
+interface PendingFile {
+  id: string;
+  file: File;
+}
+
 export function TreatmentFormModal({ patientId, treatment, initialFiles = [], onClose, onSaved }: Props) {
   const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
@@ -21,10 +26,44 @@ export function TreatmentFormModal({ patientId, treatment, initialFiles = [], on
     summary: treatment?.summary ?? "",
     notes: treatment?.notes ?? "",
   });
-  const [files, setFiles] = useState<TreatmentFile[]>(initialFiles);
+  const [existingFiles, setExistingFiles] = useState<TreatmentFile[]>(initialFiles);
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [savedTreatmentId, setSavedTreatmentId] = useState<string | null>(treatment?.id ?? null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingFiles((prev) => [...prev, { id: crypto.randomUUID(), file }]);
+    e.target.value = "";
+  };
+
+  const removePending = (id: string) => {
+    setPendingFiles((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const uploadPendingFiles = async (treatmentId: string) => {
+    for (const { file } of pendingFiles) {
+      const ext = file.name.split(".").pop();
+      const path = `${patientId}/${treatmentId}/${crypto.randomUUID()}.${ext}`;
+      const mime = file.type || "application/octet-stream";
+
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKETS.TREATMENT_FILES)
+        .upload(path, file);
+
+      if (!error) {
+        await supabase.from("treatment_files").insert({
+          treatment_id: treatmentId,
+          patient_id: patientId,
+          file_name: file.name,
+          storage_path: path,
+          mime_type: mime,
+          file_size: file.size,
+        });
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,49 +78,21 @@ export function TreatmentFormModal({ patientId, treatment, initialFiles = [], on
       notes: form.notes.trim() || null,
     };
 
+    let treatmentId = treatment?.id;
+
     if (treatment) {
       await supabase.from("treatments").update(payload).eq("id", treatment.id);
-      setSavedTreatmentId(treatment.id);
     } else {
       const { data } = await supabase.from("treatments").insert(payload).select().single();
-      if (data) setSavedTreatmentId(data.id);
+      treatmentId = data?.id;
+    }
+
+    if (treatmentId && pendingFiles.length > 0) {
+      await uploadPendingFiles(treatmentId);
     }
 
     setSaving(false);
     onSaved();
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !savedTreatmentId) return;
-    setUploading(true);
-
-    const ext = file.name.split(".").pop();
-    const path = `${patientId}/${savedTreatmentId}/${crypto.randomUUID()}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from(STORAGE_BUCKETS.TREATMENT_FILES)
-      .upload(path, file);
-
-    if (!error) {
-      const { data: newFile } = await supabase
-        .from("treatment_files")
-        .insert({
-          treatment_id: savedTreatmentId,
-          patient_id: patientId,
-          file_name: file.name,
-          storage_path: path,
-          mime_type: file.type,
-          file_size: file.size,
-        })
-        .select()
-        .single();
-
-      if (newFile) setFiles((prev) => [...prev, newFile]);
-    }
-
-    setUploading(false);
-    e.target.value = "";
   };
 
   return (
@@ -133,13 +144,13 @@ export function TreatmentFormModal({ patientId, treatment, initialFiles = [], on
           </div>
 
           <div>
-            <label className="label-base">סיכום קצר</label>
+            <label className="label-base">מטרות טיפול</label>
             <input
               type="text"
               value={form.summary}
               onChange={(e) => setForm({ ...form, summary: e.target.value })}
               className="input-base"
-              placeholder="תיאור קצר של הפגישה..."
+              placeholder="מטרות הפגישה..."
             />
           </div>
 
@@ -150,37 +161,63 @@ export function TreatmentFormModal({ patientId, treatment, initialFiles = [], on
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               className="input-base resize-none"
               rows={6}
-              placeholder="תיעוד מפורט של הטיפול, תצפיות, התקדמות, מטרות לפגישה הבאה..."
+              placeholder="תיעוד מפורט של הטיפול, תצפיות, התקדמות..."
             />
           </div>
 
-          {/* File upload – only available after save for new treatments */}
-          {savedTreatmentId ? (
-            <div>
-              <label className="label-base">קבצים מצורפים</label>
-              {files.length > 0 && (
-                <div className="mb-2 space-y-1">
-                  {files.map((f) => (
-                    <FileItem
-                      key={f.id}
-                      file={f}
-                      bucket="TREATMENT_FILES"
-                      onDeleted={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))}
-                    />
-                  ))}
-                </div>
-              )}
-              <label className={`flex items-center gap-2 border-2 border-dashed border-gray-200 rounded-xl p-3 cursor-pointer hover:border-sky-300 hover:bg-sky-50 transition-colors text-sm text-gray-500 ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
-                <Upload className="w-4 h-4" />
-                {uploading ? "מעלה..." : "לחץ להעלאת קובץ (PDF / תמונה)"}
-                <input type="file" className="hidden" accept=".pdf,image/*" onChange={handleFileUpload} />
-              </label>
-            </div>
-          ) : (
-            <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-              לאחר שמירה, ניתן יהיה לצרף קבצים ותמונות לטיפול זה.
-            </p>
-          )}
+          {/* Files */}
+          <div>
+            <label className="label-base">קבצים מצורפים</label>
+
+            {/* Existing files (edit mode) */}
+            {existingFiles.length > 0 && (
+              <div className="mb-2 space-y-1">
+                {existingFiles.map((f) => (
+                  <FileItem
+                    key={f.id}
+                    file={f}
+                    bucket="TREATMENT_FILES"
+                    onDeleted={() => setExistingFiles((prev) => prev.filter((x) => x.id !== f.id))}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Pending files (queued for upload on save) */}
+            {pendingFiles.length > 0 && (
+              <div className="mb-2 space-y-1">
+                {pendingFiles.map(({ id, file }) => (
+                  <div key={id} className="flex items-center gap-2 p-2 rounded-lg bg-sky-50">
+                    <Paperclip className="w-4 h-4 text-sky-400 shrink-0" />
+                    <span className="text-xs text-gray-700 flex-1 truncate">{file.name}</span>
+                    <span className="text-xs text-gray-400">
+                      {(file.size / 1024).toFixed(0)} KB
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removePending(id)}
+                      className="text-gray-300 hover:text-red-400 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload button */}
+            <label className="flex items-center gap-2 border-2 border-dashed border-gray-200 rounded-xl p-3 cursor-pointer hover:border-sky-300 hover:bg-sky-50 transition-colors text-sm text-gray-500">
+              <Upload className="w-4 h-4" />
+              הוסף קובץ (PDF / תמונה)
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,image/*"
+                onChange={handlePickFile}
+              />
+            </label>
+          </div>
 
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving} className="btn-primary flex-1 disabled:opacity-60">

@@ -89,8 +89,8 @@ function TreatmentRow({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900">{formatDate(treatment.session_date)}</p>
-        {treatment.summary && (
-          <p className="text-xs text-gray-500 truncate mt-0.5">{treatment.summary}</p>
+        {treatment.notes && (
+          <p className="text-xs text-gray-500 truncate mt-0.5">{treatment.notes}</p>
         )}
         {treatment.duration_min && (
           <p className="text-xs text-gray-400">{treatment.duration_min} דקות</p>

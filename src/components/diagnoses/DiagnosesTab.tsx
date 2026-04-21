@@ -120,30 +120,37 @@ export function DiagnosesTab({ patientId }: Props) {
 
 function DiagnosisCard({ diagnosis, patientId, onDelete, onRefetch }: any) {
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setUploadError(null);
 
-    const ext = file.name.split(".").pop();
-    const path = `${patientId}/${diagnosis.id}/${crypto.randomUUID()}.${ext}`;
+    const ext = file.name.split(".").pop() ?? "bin";
+    const mime = file.type || (ext === "pdf" ? "application/pdf" : "application/octet-stream");
+    const storagePath = `${patientId}/${diagnosis.id}/${crypto.randomUUID()}.${ext}`;
 
     const { error: uploadErr } = await supabase.storage
       .from(STORAGE_BUCKETS.PATIENT_FILES)
-      .upload(path, file);
+      .upload(storagePath, file, { contentType: mime });
 
-    if (!uploadErr) {
-      await supabase.from("patient_files").insert({
+    if (uploadErr) {
+      setUploadError(uploadErr.message);
+    } else {
+      const { error: dbErr } = await supabase.from("patient_files").insert({
         patient_id: patientId,
         diagnosis_id: diagnosis.id,
         file_name: file.name,
-        storage_path: path,
-        mime_type: file.type,
+        storage_path: storagePath,
+        mime_type: mime,
         file_size: file.size,
       });
-      onRefetch();
+      if (dbErr) setUploadError(dbErr.message);
+      else onRefetch();
     }
+
     setUploading(false);
     e.target.value = "";
   };
@@ -178,6 +185,9 @@ function DiagnosisCard({ diagnosis, patientId, onDelete, onRefetch }: any) {
       )}
 
       {/* Upload */}
+      {uploadError && (
+        <p className="mt-1 text-xs text-red-500">{uploadError}</p>
+      )}
       <label className={`mt-2 flex items-center gap-1.5 text-xs text-sky-600 hover:text-sky-700 cursor-pointer ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
         <Upload className="w-3.5 h-3.5" />
         {uploading ? "מעלה..." : "העלאת קובץ"}
