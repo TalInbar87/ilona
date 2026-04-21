@@ -34,12 +34,12 @@ async function callManageUsers(body: object) {
 
 export function UsersPage() {
   const navigate = useNavigate();
-  const { user: currentUser, isSuperuser } = useAuthStore();
+  const { user: currentUser, isSuperuser, loading: authLoading } = useAuthStore();
 
-  // Redirect non-superusers immediately
+  // Only redirect once auth is resolved — don't redirect while still loading
   useEffect(() => {
-    if (!isSuperuser) navigate("/", { replace: true });
-  }, [isSuperuser, navigate]);
+    if (!authLoading && !isSuperuser) navigate("/", { replace: true });
+  }, [authLoading, isSuperuser, navigate]);
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -48,6 +48,8 @@ export function UsersPage() {
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [invitePasswordConfirm, setInvitePasswordConfirm] = useState("");
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState(false);
@@ -80,13 +82,19 @@ export function UsersPage() {
   // ── Invite ─────────────────────────────────────────────────────────────────
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (invitePassword !== invitePasswordConfirm) {
+      setInviteError("הסיסמאות אינן תואמות");
+      return;
+    }
     setInviting(true);
     setInviteError(null);
     setInviteSuccess(false);
     try {
-      await callManageUsers({ action: "invite", email: inviteEmail });
+      await callManageUsers({ action: "create", email: inviteEmail, password: invitePassword });
       setInviteSuccess(true);
       setInviteEmail("");
+      setInvitePassword("");
+      setInvitePasswordConfirm("");
       fetchUsers();
     } catch (e) {
       setInviteError(e instanceof Error ? e.message : String(e));
@@ -117,6 +125,11 @@ export function UsersPage() {
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  if (authLoading) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+    </div>
+  );
   if (!isSuperuser) return null;
 
   return (
@@ -133,11 +146,11 @@ export function UsersPage() {
           </div>
         </div>
         <button
-          onClick={() => { setInviteOpen(true); setInviteSuccess(false); setInviteError(null); }}
+          onClick={() => { setInviteOpen(true); setInviteSuccess(false); setInviteError(null); setInvitePassword(""); setInvitePasswordConfirm(""); }}
           className="btn-primary flex items-center gap-2"
         >
           <UserPlus className="w-4 h-4" />
-          הזמן משתמש
+          משתמש חדש
         </button>
       </div>
 
@@ -235,7 +248,7 @@ export function UsersPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-gray-900">הזמנת משתמש חדש</h2>
+              <h2 className="text-lg font-bold text-gray-900">יצירת משתמש חדש</h2>
               <button
                 onClick={() => setInviteOpen(false)}
                 className="p-1.5 hover:bg-gray-100 rounded-lg"
@@ -249,9 +262,9 @@ export function UsersPage() {
                 <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Check className="w-7 h-7 text-emerald-600" />
                 </div>
-                <p className="font-semibold text-gray-900 mb-1">ההזמנה נשלחה!</p>
+                <p className="font-semibold text-gray-900 mb-1">המשתמש נוצר בהצלחה!</p>
                 <p className="text-sm text-gray-500">
-                  המשתמש יקבל מייל עם קישור להתחברות.
+                  המשתמש יכול להתחבר עם המייל והסיסמה שהוגדרו.
                 </p>
                 <button
                   onClick={() => { setInviteSuccess(false); setInviteOpen(false); }}
@@ -275,9 +288,42 @@ export function UsersPage() {
                     disabled={inviting}
                     dir="ltr"
                   />
-                  <p className="text-xs text-gray-400 mt-1">
-                    המשתמש יקבל מייל עם קישור הזמנה להגדרת סיסמה.
-                  </p>
+                </div>
+
+                <div>
+                  <label className="label-base">סיסמה</label>
+                  <input
+                    type="password"
+                    value={invitePassword}
+                    onChange={(e) => setInvitePassword(e.target.value)}
+                    className="input-base"
+                    placeholder="לפחות 6 תווים"
+                    required
+                    minLength={6}
+                    disabled={inviting}
+                    dir="ltr"
+                  />
+                </div>
+
+                <div>
+                  <label className="label-base">אימות סיסמה</label>
+                  <input
+                    type="password"
+                    value={invitePasswordConfirm}
+                    onChange={(e) => setInvitePasswordConfirm(e.target.value)}
+                    className={`input-base ${
+                      invitePasswordConfirm && invitePassword !== invitePasswordConfirm
+                        ? "border-red-300 focus:ring-red-300"
+                        : ""
+                    }`}
+                    placeholder="הזן שוב את הסיסמה"
+                    required
+                    disabled={inviting}
+                    dir="ltr"
+                  />
+                  {invitePasswordConfirm && invitePassword !== invitePasswordConfirm && (
+                    <p className="text-xs text-red-500 mt-1">הסיסמאות אינן תואמות</p>
+                  )}
                 </div>
 
                 {inviteError && (
@@ -289,13 +335,18 @@ export function UsersPage() {
                 <div className="flex gap-3 pt-1">
                   <button
                     type="submit"
-                    disabled={inviting || !inviteEmail.trim()}
+                    disabled={
+                      inviting ||
+                      !inviteEmail.trim() ||
+                      !invitePassword ||
+                      invitePassword !== invitePasswordConfirm
+                    }
                     className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     {inviting ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> שולח...</>
+                      <><Loader2 className="w-4 h-4 animate-spin" /> יוצר...</>
                     ) : (
-                      <><UserPlus className="w-4 h-4" /> שלח הזמנה</>
+                      <><UserPlus className="w-4 h-4" /> צור משתמש</>
                     )}
                   </button>
                   <button

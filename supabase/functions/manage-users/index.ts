@@ -82,17 +82,19 @@ Deno.serve(async (req) => {
       return json({ users });
     }
 
-    // INVITE NEW USER BY EMAIL
-    if (action === "invite") {
-      const { email } = body as { email?: string };
-      if (!email?.trim()) return json({ error: "Email required" }, 400);
+    // CREATE NEW USER WITH EMAIL + PASSWORD (no invite email)
+    if (action === "create") {
+      const { email, password } = body as { email?: string; password?: string };
+      if (!email?.trim()) return json({ error: "נדרש מייל" }, 400);
+      if (!password || password.length < 6)
+        return json({ error: "סיסמה חייבת להכיל לפחות 6 תווים" }, 400);
 
-      const origin = req.headers.get("origin") ?? "http://localhost:5173";
-      const { data, error: inviteErr } =
-        await admin.auth.admin.inviteUserByEmail(email.trim(), {
-          redirectTo: origin,
-        });
-      if (inviteErr) throw inviteErr;
+      const { data, error: createErr } = await admin.auth.admin.createUser({
+        email: email.trim(),
+        password,
+        email_confirm: true, // skip confirmation email — user can log in immediately
+      });
+      if (createErr) throw createErr;
 
       return json({ user: { id: data.user.id, email: data.user.email } });
     }
