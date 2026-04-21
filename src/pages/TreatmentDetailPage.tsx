@@ -7,6 +7,8 @@ import {
   Timer,
   Upload,
   Pencil,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { useTreatment } from "../hooks/useTreatment";
 import { formatDate, formatDateTime } from "../lib/utils";
@@ -14,41 +16,48 @@ import { FileItem } from "../components/files/FileItem";
 import { TreatmentFormModal } from "../components/treatments/TreatmentFormModal";
 import { supabase, STORAGE_BUCKETS } from "../lib/supabase";
 
+// ── Goals display ─────────────────────────────
+interface GoalItem { id: string; text: string; done: boolean; }
+
+function parseGoals(raw: string | null | undefined): GoalItem[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return [{ id: "0", text: raw, done: false }];
+}
+
 export function TreatmentDetailPage() {
   const { patientId, treatmentId } = useParams<{ patientId: string; treatmentId: string }>();
   const navigate = useNavigate();
   const { treatment, files, loading, refetch } = useTreatment(treatmentId);
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const allFiles = files;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !treatmentId || !patientId) return;
     setUploading(true);
 
-    const ext = file.name.split(".").pop();
-    const path = `${patientId}/${treatmentId}/${crypto.randomUUID()}.${ext}`;
+    const ext = file.name.split(".").pop() ?? "bin";
+    const mime = file.type || (ext === "pdf" ? "application/pdf" : "application/octet-stream");
+    const storagePath = `${patientId}/${treatmentId}/${crypto.randomUUID()}.${ext}`;
 
     const { error } = await supabase.storage
       .from(STORAGE_BUCKETS.TREATMENT_FILES)
-      .upload(path, file);
+      .upload(storagePath, file, { contentType: mime });
 
     if (!error) {
-      const { data: newFile } = await supabase
-        .from("treatment_files")
-        .insert({
-          treatment_id: treatmentId,
-          patient_id: patientId,
-          file_name: file.name,
-          storage_path: path,
-          mime_type: file.type,
-          file_size: file.size,
-        })
-        .select()
-        .single();
-
-      if (newFile) refetch();
+      await supabase.from("treatment_files").insert({
+        treatment_id: treatmentId,
+        patient_id: patientId,
+        file_name: file.name,
+        storage_path: storagePath,
+        mime_type: mime,
+        file_size: file.size,
+      });
+      refetch();
     }
     setUploading(false);
     e.target.value = "";
@@ -65,6 +74,8 @@ export function TreatmentDetailPage() {
   if (!treatment) {
     return <div className="p-6 text-center text-red-500">הטיפול לא נמצא</div>;
   }
+
+  const goals = parseGoals(treatment.summary);
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -112,11 +123,25 @@ export function TreatmentDetailPage() {
         </div>
       </div>
 
-      {/* Summary */}
-      {treatment.summary && (
-        <div className="card p-4 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">סיכום</h3>
-          <p className="text-sm text-gray-600">{treatment.summary}</p>
+      {/* Goals checklist */}
+      {goals.length > 0 && (
+        <div className="card p-5 mb-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+            <CheckSquare className="w-4 h-4 text-sky-500" />
+            מטרות טיפול
+          </h3>
+          <ul className="space-y-2">
+            {goals.map((g) => (
+              <li key={g.id} className="flex items-center gap-2.5">
+                {g.done
+                  ? <CheckSquare className="w-4 h-4 text-sky-500 shrink-0" />
+                  : <Square className="w-4 h-4 text-gray-300 shrink-0" />}
+                <span className={`text-sm ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>
+                  {g.text}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -136,7 +161,7 @@ export function TreatmentDetailPage() {
       <div className="card p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700">
-            קבצים מצורפים ({allFiles.length})
+            קבצים מצורפים ({files.length})
           </h3>
           <label className={`flex items-center gap-1.5 text-xs text-sky-600 hover:text-sky-700 cursor-pointer ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
             <Upload className="w-3.5 h-3.5" />
@@ -145,11 +170,11 @@ export function TreatmentDetailPage() {
           </label>
         </div>
 
-        {allFiles.length === 0 ? (
+        {files.length === 0 ? (
           <p className="text-sm text-gray-400">אין קבצים מצורפים</p>
         ) : (
           <div className="space-y-1">
-            {allFiles.map((f) => (
+            {files.map((f) => (
               <FileItem key={f.id} file={f} bucket="TREATMENT_FILES" onDeleted={refetch} />
             ))}
           </div>
@@ -160,7 +185,6 @@ export function TreatmentDetailPage() {
         <TreatmentFormModal
           patientId={patientId!}
           treatment={treatment}
-          initialFiles={allFiles}
           onClose={() => setShowEdit(false)}
           onSaved={() => { setShowEdit(false); refetch(); }}
         />

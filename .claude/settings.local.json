@@ -16,7 +16,8 @@
       "Bash(node /Users/talinbar/Documents/Ilona/init.mjs --help)",
       "Bash(node /Users/talinbar/Documents/Ilona/init.mjs)",
       "Bash(node -e \"const url='https://utvpcwntzjxyewsbjpho.supabase.co'; console.log\\(url.match\\(/https:\\\\/\\\\/\\([^.]+\\)\\\\./\\)?.[1]\\)\")",
-      "Bash(chmod +x /Users/talinbar/Documents/Ilona/deploy.sh)"
+      "Bash(chmod +x /Users/talinbar/Documents/Ilona/deploy.sh)",
+      "Bash(git add *)"
     ]
   }
 }
