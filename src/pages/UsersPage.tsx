@@ -27,7 +27,8 @@ async function callManageUsers(body: object) {
   const { data, error } = await supabase.functions.invoke("manage-users", {
     body,
   });
-  if (error) throw new Error(error.message);
+  // data may contain the actual error body even when error is set
+  if (error) throw new Error(data?.error ?? error.message);
   if (data?.error) throw new Error(data.error);
   return data;
 }
