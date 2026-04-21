@@ -8,9 +8,12 @@ import {
   Calendar,
   Pencil,
   Activity,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import { usePatient } from "../hooks/usePatient";
 import { calcAge, formatDate } from "../lib/utils";
+import { supabase } from "../lib/supabase";
 import { PatientFormModal } from "../components/patients/PatientFormModal";
 import { DiagnosesTab } from "../components/diagnoses/DiagnosesTab";
 import { TreatmentsTab } from "../components/treatments/TreatmentsTab";
@@ -23,6 +26,23 @@ export function PatientDetailPage() {
   const { data: patient, loading, error, refetch } = usePatient(patientId);
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [showEdit, setShowEdit] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  const handleArchiveToggle = async () => {
+    if (!patient) return;
+    const isArchived = !!patient.archived_at;
+    const msg = isArchived
+      ? "להחזיר את המטופל לרשימה הפעילה?"
+      : "להעביר את המטופל לארכיון?";
+    if (!confirm(msg)) return;
+    setArchiving(true);
+    await supabase
+      .from("patients")
+      .update({ archived_at: isArchived ? null : new Date().toISOString() })
+      .eq("id", patient.id);
+    setArchiving(false);
+    navigate("/patients");
+  };
 
   if (loading) {
     return (
@@ -96,13 +116,28 @@ export function PatientDetailPage() {
               <span className="font-semibold text-sm">{patient.treatment_count}</span>
               <span className="text-xs">טיפולים</span>
             </div>
-            <button
-              onClick={() => setShowEdit(true)}
-              className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-sm"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              עריכה
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleArchiveToggle}
+                disabled={archiving}
+                className={`flex items-center gap-1.5 py-1.5 px-3 text-sm rounded-lg border transition-colors disabled:opacity-50 ${
+                  patient.archived_at
+                    ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                    : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                {patient.archived_at
+                  ? <><ArchiveRestore className="w-3.5 h-3.5" /> שחזור</>
+                  : <><Archive className="w-3.5 h-3.5" /> ארכיון</>}
+              </button>
+              <button
+                onClick={() => setShowEdit(true)}
+                className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-sm"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                עריכה
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -9,4 +9,5 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 export const STORAGE_BUCKETS = {
   PATIENT_FILES: "patient-files",
   TREATMENT_FILES: "treatment-files",
+  SUPERVISEE_FILES: "supervisee-files",
 } as const;

@@ -18,6 +18,7 @@ export type Database = {
           phone: string | null;
           parent_name: string | null;
           notes: string | null;
+          archived_at: string | null;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -30,6 +31,7 @@ export type Database = {
           phone?: string | null;
           parent_name?: string | null;
           notes?: string | null;
+          archived_at?: string | null;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -42,10 +44,120 @@ export type Database = {
           phone?: string | null;
           parent_name?: string | null;
           notes?: string | null;
+          archived_at?: string | null;
           updated_at?: string;
           created_by?: string | null;
         };
         Relationships: [];
+      };
+      supervisees: {
+        Row: {
+          id: string;
+          full_name: string;
+          phone: string | null;
+          email: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          full_name: string;
+          phone?: string | null;
+          email?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          full_name?: string;
+          phone?: string | null;
+          email?: string | null;
+          notes?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      supervision_sessions: {
+        Row: {
+          id: string;
+          supervisee_id: string;
+          session_date: string;
+          session_time: string | null;
+          duration_min: number | null;
+          goals: string | null;
+          summary: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          supervisee_id: string;
+          session_date: string;
+          session_time?: string | null;
+          duration_min?: number | null;
+          goals?: string | null;
+          summary?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          session_date?: string;
+          session_time?: string | null;
+          duration_min?: number | null;
+          goals?: string | null;
+          summary?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "supervision_sessions_supervisee_id_fkey";
+            columns: ["supervisee_id"];
+            isOneToOne: false;
+            referencedRelation: "supervisees";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      supervision_files: {
+        Row: {
+          id: string;
+          session_id: string;
+          supervisee_id: string;
+          file_name: string;
+          storage_path: string;
+          mime_type: string;
+          file_size: number | null;
+          uploaded_at: string;
+          uploaded_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          supervisee_id: string;
+          file_name: string;
+          storage_path: string;
+          mime_type: string;
+          file_size?: number | null;
+          uploaded_at?: string;
+          uploaded_by?: string | null;
+        };
+        Update: {
+          file_name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "supervision_files_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "supervision_sessions";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       diagnoses: {
         Row: {
@@ -273,6 +385,8 @@ export type Database = {
           phone: string | null;
           parent_name: string | null;
           notes: string | null;
+          archived_at: string | null;
+          is_archived: boolean;
           created_at: string;
           updated_at: string;
           created_by: string | null;

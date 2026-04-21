@@ -34,3 +34,13 @@ export type AppointmentUpdate =
   Database["public"]["Tables"]["appointments"]["Update"];
 
 export type AppointmentStatus = Appointment["status"];
+
+export type Supervisee = Database["public"]["Tables"]["supervisees"]["Row"];
+export type SuperviseeInsert = Database["public"]["Tables"]["supervisees"]["Insert"];
+export type SuperviseeUpdate = Database["public"]["Tables"]["supervisees"]["Update"];
+
+export type SupervisionSession = Database["public"]["Tables"]["supervision_sessions"]["Row"];
+export type SupervisionSessionInsert = Database["public"]["Tables"]["supervision_sessions"]["Insert"];
+export type SupervisionSessionUpdate = Database["public"]["Tables"]["supervision_sessions"]["Update"];
+
+export type SupervisionFile = Database["public"]["Tables"]["supervision_files"]["Row"];
