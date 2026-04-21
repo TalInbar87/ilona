@@ -30,7 +30,7 @@ export function AppShell() {
           <Stethoscope className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="text-sm font-bold text-gray-900">מרפאת איילונה</p>
+          <p className="text-sm font-bold text-gray-900">מערכת ניהול</p>
           <p className="text-xs text-gray-400">קלינאות תקשורת</p>
         </div>
       </div>
@@ -89,7 +89,7 @@ export function AppShell() {
           <div className="w-7 h-7 bg-sky-600 rounded-lg flex items-center justify-center">
             <Stethoscope className="w-4 h-4 text-white" />
           </div>
-          <p className="text-sm font-bold text-gray-900">מרפאת איילונה</p>
+          <p className="text-sm font-bold text-gray-900">מערכת ניהול</p>
         </div>
         <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
           <Menu className="w-5 h-5 text-gray-600" />
