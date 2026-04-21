@@ -16,6 +16,7 @@ export function AppShell() {
   const signOut = useAuthStore((s) => s.signOut);
   const user = useAuthStore((s) => s.user);
   const isSuperuser = useAuthStore((s) => s.isSuperuser);
+  const superuserLoading = useAuthStore((s) => s.superuserLoading);
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -60,7 +61,7 @@ export function AppShell() {
         ))}
 
         {/* Superuser only */}
-        {isSuperuser && (
+        {!superuserLoading && isSuperuser && (
           <>
             <div className="border-t border-gray-100 my-1" />
             <NavLink

@@ -6,23 +6,26 @@ interface AuthState {
   session: Session | null;
   user: User | null;
   isSuperuser: boolean;
-  loading: boolean;
+  loading: boolean;          // auth session loading — controls ProtectedRoute spinner
+  superuserLoading: boolean; // profile loading — controls UsersPage redirect guard
   init: () => void;
   signOut: () => Promise<void>;
 }
 
+/** Never throws, never hangs — resolves within 5 s at most. */
 async function fetchIsSuperuser(userId: string): Promise<boolean> {
-  try {
-    const { data, error } = await supabase
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(false), 5000);
+    supabase
       .from("profiles")
       .select("is_superuser")
       .eq("id", userId)
-      .single();
-    if (error) return false;
-    return data?.is_superuser ?? false;
-  } catch {
-    return false;
-  }
+      .single()
+      .then(({ data, error }) => {
+        clearTimeout(timer);
+        resolve(error ? false : (data?.is_superuser ?? false));
+      }, () => { clearTimeout(timer); resolve(false); });
+  });
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -30,30 +33,46 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isSuperuser: false,
   loading: true,
+  superuserLoading: true,
 
   init: () => {
+    // ── Initial session ──────────────────────────────────────────────────────
     supabase.auth.getSession()
-      .then(async ({ data: { session } }) => {
-        // Always set loading:false — even if profile fetch fails
-        const isSuperuser = session?.user
-          ? await fetchIsSuperuser(session.user.id)
-          : false;
-        set({ session, user: session?.user ?? null, isSuperuser, loading: false });
+      .then(({ data: { session } }) => {
+        // Set loading:false immediately — app is unblocked
+        set({ session, user: session?.user ?? null, loading: false });
+
+        // Fetch superuser status separately (non-blocking for ProtectedRoute)
+        if (session?.user) {
+          fetchIsSuperuser(session.user.id).then((isSuperuser) => {
+            set({ isSuperuser, superuserLoading: false });
+          });
+        } else {
+          set({ superuserLoading: false });
+        }
       })
-      .catch(() => {
-        set({ loading: false });
+      .catch(() => set({ loading: false, superuserLoading: false }));
+
+    // ── Auth state changes (login / logout) ───────────────────────────────────
+    supabase.auth.onAuthStateChange((_event, session) => {
+      set({
+        session,
+        user: session?.user ?? null,
+        loading: false,
+        isSuperuser: false,
+        superuserLoading: !!session?.user,
       });
 
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      const isSuperuser = session?.user
-        ? await fetchIsSuperuser(session.user.id)
-        : false;
-      set({ session, user: session?.user ?? null, isSuperuser, loading: false });
+      if (session?.user) {
+        fetchIsSuperuser(session.user.id).then((isSuperuser) => {
+          set({ isSuperuser, superuserLoading: false });
+        });
+      }
     });
   },
 
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ session: null, user: null, isSuperuser: false });
+    set({ session: null, user: null, isSuperuser: false, superuserLoading: false });
   },
 }));

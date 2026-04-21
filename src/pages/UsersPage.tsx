@@ -35,12 +35,12 @@ async function callManageUsers(body: object) {
 
 export function UsersPage() {
   const navigate = useNavigate();
-  const { user: currentUser, isSuperuser, loading: authLoading } = useAuthStore();
+  const { user: currentUser, isSuperuser, superuserLoading } = useAuthStore();
 
-  // Only redirect once auth is resolved — don't redirect while still loading
+  // Only redirect after the profile check is done — not while still loading
   useEffect(() => {
-    if (!authLoading && !isSuperuser) navigate("/", { replace: true });
-  }, [authLoading, isSuperuser, navigate]);
+    if (!superuserLoading && !isSuperuser) navigate("/", { replace: true });
+  }, [superuserLoading, isSuperuser, navigate]);
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -126,7 +126,7 @@ export function UsersPage() {
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
-  if (authLoading) return (
+  if (superuserLoading) return (
     <div className="flex items-center justify-center h-64">
       <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
     </div>
