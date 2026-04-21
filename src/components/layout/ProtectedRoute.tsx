@@ -1,8 +1,9 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuthStore();
+  const { session, loading, forcePasswordChange } = useAuthStore();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -14,6 +15,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!session) {
     return <Navigate to="/login" replace />;
+  }
+
+  // New users must change their password before accessing the app
+  if (forcePasswordChange && location.pathname !== "/change-password") {
+    return <Navigate to="/change-password" replace />;
   }
 
   return <>{children}</>;

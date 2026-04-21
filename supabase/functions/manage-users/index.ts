@@ -43,7 +43,20 @@ Deno.serve(async (req) => {
 
     if (authErr || !caller) return json({ error: "Unauthorized" }, 401);
 
-    // ── Verify caller is a superuser ────────────────────────────────────────
+    // ── Route action ────────────────────────────────────────────────────────
+    const body = await req.json();
+    const { action } = body;
+
+    // CLEAR FORCE PASSWORD CHANGE — any authenticated user can call this for themselves
+    if (action === "clear_force_change") {
+      const { error: updateErr } = await admin.auth.admin.updateUserById(caller.id, {
+        app_metadata: { force_password_change: false },
+      });
+      if (updateErr) throw updateErr;
+      return json({ ok: true });
+    }
+
+    // ── Verify caller is a superuser (required for all remaining actions) ───
     const { data: callerProfile, error: profileErr } = await admin
       .from("profiles")
       .select("is_superuser")
@@ -59,10 +72,6 @@ Deno.serve(async (req) => {
         profile_error: profileErr?.message ?? null,
       }
     }, 403);
-
-    // ── Route action ────────────────────────────────────────────────────────
-    const body = await req.json();
-    const { action } = body;
 
     // LIST ALL USERS
     if (action === "list") {
@@ -101,6 +110,7 @@ Deno.serve(async (req) => {
         email: email.trim(),
         password,
         email_confirm: true, // skip confirmation email — user can log in immediately
+        app_metadata: { force_password_change: true }, // must change on first login
       });
       if (createErr) throw createErr;
 

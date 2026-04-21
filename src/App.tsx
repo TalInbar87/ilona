@@ -13,6 +13,7 @@ import { SuperviseeDetailPage } from "./pages/SuperviseeDetailPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { GoalsBankPage } from "./pages/GoalsBankPage";
 import { UsersPage } from "./pages/UsersPage";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 
 export default function App() {
   const init = useAuthStore((s) => s.init);
@@ -25,6 +26,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePasswordPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/"
           element={

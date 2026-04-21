@@ -6,6 +6,7 @@ interface AuthState {
   session: Session | null;
   user: User | null;
   isSuperuser: boolean;
+  forcePasswordChange: boolean; // true = user must change password before using the app
   loading: boolean;          // auth session loading — controls ProtectedRoute spinner
   superuserLoading: boolean; // profile loading — controls UsersPage redirect guard
   init: () => void;
@@ -32,6 +33,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   user: null,
   isSuperuser: false,
+  forcePasswordChange: false,
   loading: true,
   superuserLoading: true,
 
@@ -40,7 +42,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         // Set loading:false immediately — app is unblocked
-        set({ session, user: session?.user ?? null, loading: false });
+        set({
+          session,
+          user: session?.user ?? null,
+          forcePasswordChange: session?.user?.app_metadata?.force_password_change ?? false,
+          loading: false,
+        });
 
         // Fetch superuser status separately (non-blocking for ProtectedRoute)
         if (session?.user) {
@@ -53,11 +60,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       })
       .catch(() => set({ loading: false, superuserLoading: false }));
 
-    // ── Auth state changes (login / logout) ───────────────────────────────────
+    // ── Auth state changes (login / logout / token refresh) ──────────────────
     supabase.auth.onAuthStateChange((_event, session) => {
       set({
         session,
         user: session?.user ?? null,
+        forcePasswordChange: session?.user?.app_metadata?.force_password_change ?? false,
         loading: false,
         isSuperuser: false,
         superuserLoading: !!session?.user,
@@ -73,6 +81,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ session: null, user: null, isSuperuser: false, superuserLoading: false });
+    set({ session: null, user: null, isSuperuser: false, forcePasswordChange: false, superuserLoading: false });
   },
 }));
