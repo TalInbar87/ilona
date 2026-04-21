@@ -13,6 +13,7 @@ const navItems = [
 
 export function AppShell() {
   const signOut = useAuthStore((s) => s.signOut);
+  const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -29,7 +30,7 @@ export function AppShell() {
           <Stethoscope className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="text-sm font-bold text-gray-900">מערכת ניהול</p>
+          <p className="text-sm font-bold text-gray-900">מרפאת איילונה</p>
           <p className="text-xs text-gray-400">קלינאות תקשורת</p>
         </div>
       </div>
@@ -57,8 +58,13 @@ export function AppShell() {
         ))}
       </nav>
 
-      {/* Sign out */}
+      {/* User + Sign out */}
       <div className="p-3 border-t border-gray-100">
+        {user?.email && (
+          <p className="px-3 mb-1.5 text-xs text-gray-400 truncate" title={user.email}>
+            {user.email}
+          </p>
+        )}
         <button
           onClick={handleSignOut}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors w-full"
