@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Upload, Paperclip, Plus, Trash2, CheckSquare, Square } from "lucide-react";
+import { X, Upload, Paperclip, Trash2, CheckSquare, Square } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
+import { GoalPicker } from "../goals/GoalPicker";
 import type { Treatment, TreatmentFile } from "../../types";
 
 // ── Goals checklist helpers ───────────────────
@@ -58,7 +59,6 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   });
 
   const [goals, setGoals] = useState<GoalItem[]>(() => parseGoals(treatment?.summary));
-  const [newGoalText, setNewGoalText] = useState("");
 
   const [existingFiles, setExistingFiles] = useState<TreatmentFile[]>([]);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
@@ -82,21 +82,14 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   }, [treatment?.id]);
 
   // ── Goals ──────────────────────────────────
-  const addGoal = () => {
-    if (!newGoalText.trim()) return;
-    setGoals((prev) => [...prev, { id: crypto.randomUUID(), text: newGoalText.trim(), done: false }]);
-    setNewGoalText("");
-  };
+  const addGoal = (text: string) =>
+    setGoals((prev) => [...prev, { id: crypto.randomUUID(), text, done: false }]);
 
   const toggleGoal = (id: string) =>
     setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, done: !g.done } : g)));
 
   const removeGoal = (id: string) =>
     setGoals((prev) => prev.filter((g) => g.id !== id));
-
-  const handleGoalKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") { e.preventDefault(); addGoal(); }
-  };
 
   // ── Files ──────────────────────────────────
   const handlePickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,24 +243,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
               </ul>
             )}
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newGoalText}
-                onChange={(e) => setNewGoalText(e.target.value)}
-                onKeyDown={handleGoalKeyDown}
-                className="input-base text-sm flex-1"
-                placeholder="הוסף מטרה... (Enter לאישור)"
-              />
-              <button
-                type="button"
-                onClick={addGoal}
-                disabled={!newGoalText.trim()}
-                className="btn-secondary px-3 py-2 disabled:opacity-40"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
+            <GoalPicker onAdd={addGoal} colorScheme="sky" />
           </div>
 
           {/* Notes */}

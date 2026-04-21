@@ -331,6 +331,27 @@ export type Database = {
           }
         ];
       };
+      treatment_goals_bank: {
+        Row: {
+          id: string;
+          text: string;
+          use_count: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          text: string;
+          use_count?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          text?: string;
+          use_count?: number;
+        };
+        Relationships: [];
+      };
       appointments: {
         Row: {
           id: string;
@@ -399,7 +420,12 @@ export type Database = {
         Relationships: [];
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      upsert_goal_bank: {
+        Args: { p_text: string };
+        Returns: void;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

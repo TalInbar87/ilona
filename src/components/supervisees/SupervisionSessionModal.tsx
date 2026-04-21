@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Upload, Paperclip, Plus, Trash2, CheckSquare, Square } from "lucide-react";
+import { X, Upload, Paperclip, Trash2, CheckSquare, Square } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
+import { GoalPicker } from "../goals/GoalPicker";
 import type { SupervisionSession, SupervisionFile } from "../../types";
 
 // ── Goals checklist (same pattern as treatments) ──
@@ -35,7 +36,6 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
     summary: session?.summary ?? "",
   });
   const [goals, setGoals] = useState<GoalItem[]>(() => parseGoals(session?.goals));
-  const [newGoalText, setNewGoalText] = useState("");
   const [existingFiles, setExistingFiles] = useState<SupervisionFile[]>([]);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
@@ -48,11 +48,8 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
       .then(({ data }) => setExistingFiles(data ?? []));
   }, [session?.id]);
 
-  const addGoal = () => {
-    if (!newGoalText.trim()) return;
-    setGoals((p) => [...p, { id: crypto.randomUUID(), text: newGoalText.trim(), done: false }]);
-    setNewGoalText("");
-  };
+  const addGoal = (text: string) =>
+    setGoals((p) => [...p, { id: crypto.randomUUID(), text, done: false }]);
   const toggleGoal = (id: string) => setGoals((p) => p.map((g) => g.id === id ? { ...g, done: !g.done } : g));
   const removeGoal = (id: string) => setGoals((p) => p.filter((g) => g.id !== id));
 
@@ -145,10 +142,7 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
                 ))}
               </ul>
             )}
-            <div className="flex gap-2">
-              <input type="text" value={newGoalText} onChange={(e) => setNewGoalText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGoal(); } }} className="input-base text-sm flex-1" placeholder="הוסף מטרה... (Enter)" />
-              <button type="button" onClick={addGoal} disabled={!newGoalText.trim()} className="btn-secondary px-3 py-2 disabled:opacity-40"><Plus className="w-4 h-4" /></button>
-            </div>
+            <GoalPicker onAdd={addGoal} colorScheme="violet" />
           </div>
 
           {/* Summary */}

@@ -21,7 +21,8 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(gh pr create --title 'feat: treatment goals checklist, file upload fixes' --body ' *)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx tsc *)"
     ]
   }
 }

@@ -4,6 +4,7 @@ import { useDiagnoses } from "../../hooks/useDiagnoses";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { formatDate } from "../../lib/utils";
 import { FileItem } from "../files/FileItem";
+import { GoalPicker } from "../goals/GoalPicker";
 
 // ── Goals helpers (same pattern as treatments) ──────────────────────
 interface GoalItem { id: string; text: string; done: boolean; }
@@ -27,14 +28,10 @@ export function DiagnosesTab({ patientId }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", diagnosed_at: "" });
   const [formGoals, setFormGoals] = useState<GoalItem[]>([]);
-  const [newGoalText, setNewGoalText] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const addGoal = () => {
-    if (!newGoalText.trim()) return;
-    setFormGoals((p) => [...p, { id: crypto.randomUUID(), text: newGoalText.trim(), done: false }]);
-    setNewGoalText("");
-  };
+  const addGoal = (text: string) =>
+    setFormGoals((p) => [...p, { id: crypto.randomUUID(), text, done: false }]);
   const toggleGoal = (id: string) =>
     setFormGoals((p) => p.map((g) => g.id === id ? { ...g, done: !g.done } : g));
   const removeGoal = (id: string) =>
@@ -53,7 +50,6 @@ export function DiagnosesTab({ patientId }: Props) {
     });
     setForm({ title: "", description: "", diagnosed_at: "" });
     setFormGoals([]);
-    setNewGoalText("");
     setShowForm(false);
     setSaving(false);
     refetch();
@@ -115,19 +111,7 @@ export function DiagnosesTab({ patientId }: Props) {
                 ))}
               </ul>
             )}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newGoalText}
-                onChange={(e) => setNewGoalText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGoal(); } }}
-                className="input-base text-sm flex-1"
-                placeholder="הוסף מטרה... (Enter)"
-              />
-              <button type="button" onClick={addGoal} disabled={!newGoalText.trim()} className="btn-secondary px-3 py-2 disabled:opacity-40">
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <GoalPicker onAdd={addGoal} colorScheme="sky" />
           </div>
 
           <div>
