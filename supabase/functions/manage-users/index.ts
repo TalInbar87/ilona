@@ -44,13 +44,21 @@ Deno.serve(async (req) => {
     if (authErr || !caller) return json({ error: "Unauthorized" }, 401);
 
     // ── Verify caller is a superuser ────────────────────────────────────────
-    const { data: callerProfile } = await admin
+    const { data: callerProfile, error: profileErr } = await admin
       .from("profiles")
       .select("is_superuser")
       .eq("id", caller.id)
       .single();
 
-    if (!callerProfile?.is_superuser) return json({ error: "Forbidden" }, 403);
+    if (!callerProfile?.is_superuser) return json({
+      error: "Forbidden",
+      _debug: {
+        caller_id: caller.id,
+        caller_email: caller.email,
+        profile: callerProfile,
+        profile_error: profileErr?.message ?? null,
+      }
+    }, 403);
 
     // ── Route action ────────────────────────────────────────────────────────
     const body = await req.json();
@@ -120,6 +128,18 @@ Deno.serve(async (req) => {
         .update({ is_superuser: isSuperuser })
         .eq("id", userId);
       if (updateErr) throw updateErr;
+
+      return json({ ok: true });
+    }
+
+    // DELETE USER
+    if (action === "delete") {
+      const { userId } = body as { userId?: string };
+      if (!userId) return json({ error: "userId required" }, 400);
+      if (userId === caller.id) return json({ error: "אין אפשרות למחוק את המשתמש הנוכחי" }, 400);
+
+      const { error: deleteErr } = await admin.auth.admin.deleteUser(userId);
+      if (deleteErr) throw deleteErr;
 
       return json({ ok: true });
     }

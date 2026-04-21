@@ -10,6 +10,7 @@ import {
   X,
   Check,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authStore";
@@ -56,6 +57,8 @@ export function UsersPage() {
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // ── Fetch users ────────────────────────────────────────────────────────────
   const fetchUsers = useCallback(async () => {
@@ -101,6 +104,20 @@ export function UsersPage() {
       setInviteError(e instanceof Error ? e.message : String(e));
     } finally {
       setInviting(false);
+    }
+  };
+
+  // ── Delete user ────────────────────────────────────────────────────────────
+  const handleDelete = async (userId: string) => {
+    setDeletingId(userId);
+    try {
+      await callManageUsers({ action: "delete", userId });
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      setConfirmDeleteId(null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -239,6 +256,38 @@ export function UsersPage() {
                 )}
                 {u.is_superuser ? "מנהל" : "משתמש רגיל"}
               </button>
+
+              {/* Delete — only for other users */}
+              {u.id !== currentUser?.id && (
+                confirmDeleteId === u.id ? (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-xs text-red-500">למחוק?</span>
+                    <button
+                      onClick={() => handleDelete(u.id)}
+                      disabled={deletingId === u.id}
+                      className="p-1.5 hover:bg-red-50 rounded-lg text-red-400 disabled:opacity-50"
+                    >
+                      {deletingId === u.id
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : <Check className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(u.id)}
+                    title="מחק משתמש"
+                    className="shrink-0 p-1.5 hover:bg-red-50 rounded-lg text-gray-300 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )
+              )}
             </li>
           ))}
         </ul>
