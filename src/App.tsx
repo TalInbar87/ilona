@@ -11,6 +11,7 @@ import { TreatmentDetailPage } from "./pages/TreatmentDetailPage";
 import { SuperviseesPage } from "./pages/SuperviseesPage";
 import { SuperviseeDetailPage } from "./pages/SuperviseeDetailPage";
 import { CalendarPage } from "./pages/CalendarPage";
+import { GoalsBankPage } from "./pages/GoalsBankPage";
 
 export default function App() {
   const init = useAuthStore((s) => s.init);
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="supervisees" element={<SuperviseesPage />} />
           <Route path="supervisees/:superviseeId" element={<SuperviseeDetailPage />} />
           <Route path="calendar" element={<CalendarPage />} />
+          <Route path="goals-bank" element={<GoalsBankPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

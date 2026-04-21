@@ -8,6 +8,7 @@ import heLocale from "@fullcalendar/core/locales/he";
 import type { DateSelectArg, EventClickArg, EventInput } from "@fullcalendar/core";
 import { useAppointments } from "../hooks/useAppointments";
 import { AppointmentModal } from "../components/calendar/AppointmentModal";
+import { ISRAELI_HOLIDAYS } from "../lib/israeliHolidays";
 import type { Appointment } from "../types";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -34,7 +35,7 @@ export function CalendarPage() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const calendarRef = useRef<FullCalendar>(null);
 
-  const events: EventInput[] = appointments.map((a) => ({
+  const appointmentEvents: EventInput[] = appointments.map((a) => ({
     id: a.id,
     title: (a as any).patients?.full_name ?? "מטופל",
     start: a.start_time,
@@ -43,6 +44,8 @@ export function CalendarPage() {
     borderColor: "transparent",
     extendedProps: { appointment: a },
   }));
+
+  const events: EventInput[] = [...appointmentEvents, ...ISRAELI_HOLIDAYS];
 
   const handleDatesSet = (info: { startStr: string; endStr: string }) => {
     setRange({ start: info.startStr, end: info.endStr });
@@ -68,6 +71,10 @@ export function CalendarPage() {
               {STATUS_LABELS[status]}
             </span>
           ))}
+          <span className="flex items-center gap-1 border-r border-gray-200 pr-3 mr-0.5">
+            <span className="w-2.5 h-2.5 rounded-sm shrink-0 bg-yellow-200" />
+            חופשות משרד החינוך
+          </span>
         </div>
       </div>
 

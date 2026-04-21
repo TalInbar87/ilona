@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X } from "lucide-react";
+import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { cn } from "../../lib/utils";
 
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/patients", icon: Users, label: "מטופלים" },
   { to: "/supervisees", icon: GraduationCap, label: "מודרכות" },
   { to: "/calendar", icon: Calendar, label: "לוח שנה" },
+  { to: "/goals-bank", icon: BookOpen, label: "בנק מטרות" },
 ];
 
 export function AppShell() {
