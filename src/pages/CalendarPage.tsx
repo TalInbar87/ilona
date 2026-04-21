@@ -17,6 +17,15 @@ const STATUS_COLORS: Record<string, string> = {
   no_show: "#f59e0b",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  scheduled: "מתוכנן",
+  completed: "בוצע",
+  cancelled: "בוטל",
+  no_show: "לא הגיע",
+};
+
+const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
 export function CalendarPage() {
   const navigate = useNavigate();
   const [range, setRange] = useState<{ start: string; end: string } | null>(null);
@@ -48,31 +57,45 @@ export function CalendarPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 md:mb-6">
         <h1 className="text-xl font-bold text-gray-900">לוח שנה</h1>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
           {Object.entries(STATUS_COLORS).map(([status, color]) => (
             <span key={status} className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-              {status === "scheduled" ? "מתוכנן" : status === "completed" ? "בוצע" : status === "cancelled" ? "בוטל" : "לא הגיע"}
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+              {STATUS_LABELS[status]}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="card p-4">
+      <div className="card p-2 md:p-4">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
+          initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
           locale={heLocale}
           direction="rtl"
-          headerToolbar={{
-            start: "prev,next today",
-            center: "title",
-            end: "dayGridMonth,timeGridWeek,timeGridDay",
-          }}
+          headerToolbar={
+            isMobile
+              ? {
+                  start: "prev,next",
+                  center: "title",
+                  end: "today",
+                }
+              : {
+                  start: "prev,next today",
+                  center: "title",
+                  end: "dayGridMonth,timeGridWeek,timeGridDay",
+                }
+          }
+          footerToolbar={
+            isMobile
+              ? { center: "dayGridMonth,timeGridWeek,timeGridDay" }
+              : undefined
+          }
           buttonText={{ today: "היום", month: "חודש", week: "שבוע", day: "יום" }}
           selectable
           selectMirror
@@ -80,12 +103,13 @@ export function CalendarPage() {
           datesSet={handleDatesSet}
           select={handleSelect}
           eventClick={handleEventClick}
-          height="calc(100vh - 200px)"
+          height={isMobile ? "calc(100dvh - 200px)" : "calc(100vh - 200px)"}
           slotMinTime="07:00:00"
           slotMaxTime="22:00:00"
           allDaySlot={false}
           nowIndicator
           businessHours={{ daysOfWeek: [0, 1, 2, 3, 4], startTime: "08:00", endTime: "18:00" }}
+          eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
         />
       </div>
 

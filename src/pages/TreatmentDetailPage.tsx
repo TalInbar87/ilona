@@ -78,7 +78,7 @@ export function TreatmentDetailPage() {
   const goals = parseGoals(treatment.summary);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-4 md:p-6 max-w-3xl mx-auto">
       <button
         onClick={() => navigate(`/patients/${patientId}`)}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors"
@@ -88,13 +88,13 @@ export function TreatmentDetailPage() {
       </button>
 
       {/* Header */}
-      <div className="card p-5 mb-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <h1 className="text-xl font-bold text-gray-900">
+      <div className="card p-4 md:p-5 mb-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+          <div className="space-y-2 min-w-0">
+            <h1 className="text-lg md:text-xl font-bold text-gray-900">
               תיעוד טיפול — {formatDate(treatment.session_date)}
             </h1>
-            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-3 text-sm text-gray-500">
               {treatment.session_time && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -115,7 +115,7 @@ export function TreatmentDetailPage() {
           </div>
           <button
             onClick={() => setShowEdit(true)}
-            className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-sm"
+            className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-sm self-start shrink-0"
           >
             <Pencil className="w-3.5 h-3.5" />
             עריכה

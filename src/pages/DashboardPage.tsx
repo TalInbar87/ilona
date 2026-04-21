@@ -38,8 +38,8 @@ export function DashboardPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">שלום!</h1>
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-5 md:mb-6">שלום!</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">

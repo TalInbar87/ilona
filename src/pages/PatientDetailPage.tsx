@@ -76,7 +76,7 @@ export function PatientDetailPage() {
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
       {/* Back */}
       <button
         onClick={() => navigate("/patients")}
@@ -87,21 +87,22 @@ export function PatientDetailPage() {
       </button>
 
       {/* Patient Header Card */}
-      <div className="card p-5 mb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-sky-100 rounded-2xl flex items-center justify-center shrink-0">
-              <User className="w-7 h-7 text-sky-600" />
+      <div className="card p-4 md:p-5 mb-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          {/* Avatar + info */}
+          <div className="flex items-start gap-4 min-w-0">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-sky-100 rounded-2xl flex items-center justify-center shrink-0">
+              <User className="w-6 h-6 md:w-7 md:h-7 text-sky-600" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">{patient.full_name}</h1>
-              <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-gray-500">
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-tight">{patient.full_name}</h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1.5 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
-                  <Hash className="w-3.5 h-3.5" />
+                  <Hash className="w-3.5 h-3.5 shrink-0" />
                   {patient.id_number}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
                   {formatDate(patient.date_of_birth)} ({calcAgeLabel(patient.date_of_birth)})
                 </span>
                 {patient.phone && (
@@ -117,47 +118,45 @@ export function PatientDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Treatment count badge */}
-            <div className="flex items-center gap-1.5 bg-sky-50 text-sky-700 px-3 py-1.5 rounded-xl">
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            <div className="flex items-center gap-1.5 bg-sky-50 text-sky-700 px-2.5 py-1.5 rounded-xl">
               <Activity className="w-4 h-4" />
               <span className="font-semibold text-sm">{patient.treatment_count}</span>
               <span className="text-xs">טיפולים</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleArchiveToggle}
-                disabled={archiving}
-                className={`flex items-center gap-1.5 py-1.5 px-3 text-sm rounded-lg border transition-colors disabled:opacity-50 ${
-                  patient.archived_at
-                    ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                    : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                }`}
-              >
-                {patient.archived_at
-                  ? <><ArchiveRestore className="w-3.5 h-3.5" /> שחזור</>
-                  : <><Archive className="w-3.5 h-3.5" /> ארכיון</>}
-              </button>
-              <button
-                onClick={() => setShowEdit(true)}
-                className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-sm"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                עריכה
-              </button>
-            </div>
+            <button
+              onClick={handleArchiveToggle}
+              disabled={archiving}
+              className={`flex items-center gap-1.5 py-1.5 px-2.5 md:px-3 text-sm rounded-lg border transition-colors disabled:opacity-50 ${
+                patient.archived_at
+                  ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                  : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {patient.archived_at
+                ? <><ArchiveRestore className="w-3.5 h-3.5" /><span className="hidden sm:inline"> שחזור</span></>
+                : <><Archive className="w-3.5 h-3.5" /><span className="hidden sm:inline"> ארכיון</span></>}
+            </button>
+            <button
+              onClick={() => setShowEdit(true)}
+              className="btn-secondary flex items-center gap-1.5 py-1.5 px-2.5 md:px-3 text-sm"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">עריכה</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="card overflow-hidden">
-        <div className="flex border-b border-gray-100 bg-gray-50">
+        <div className="flex border-b border-gray-100 bg-gray-50 overflow-x-auto">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
+              className={`px-4 md:px-5 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap shrink-0 ${
                 activeTab === t.id
                   ? "border-sky-600 text-sky-700 bg-white"
                   : "border-transparent text-gray-500 hover:text-gray-700"

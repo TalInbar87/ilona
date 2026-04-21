@@ -17,7 +17,11 @@
       "Bash(node /Users/talinbar/Documents/Ilona/init.mjs)",
       "Bash(node -e \"const url='https://utvpcwntzjxyewsbjpho.supabase.co'; console.log\\(url.match\\(/https:\\\\/\\\\/\\([^.]+\\)\\\\./\\)?.[1]\\)\")",
       "Bash(chmod +x /Users/talinbar/Documents/Ilona/deploy.sh)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'feat: treatment goals checklist, file upload fixes' --body ' *)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

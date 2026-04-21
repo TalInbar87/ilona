@@ -42,14 +42,14 @@ export function SuperviseeDetailPage() {
       </button>
 
       {/* Header */}
-      <div className="card p-5 mb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-violet-100 rounded-2xl flex items-center justify-center shrink-0">
-              <GraduationCap className="w-7 h-7 text-violet-600" />
+      <div className="card p-4 md:p-5 mb-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div className="flex items-start gap-4 min-w-0">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-violet-100 rounded-2xl flex items-center justify-center shrink-0">
+              <GraduationCap className="w-6 h-6 md:w-7 md:h-7 text-violet-600" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">{supervisee?.full_name ?? "..."}</h1>
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-xl font-bold text-gray-900">{supervisee?.full_name ?? "..."}</h1>
               <div className="flex flex-wrap gap-3 mt-1.5 text-sm text-gray-500">
                 {supervisee?.phone && <span className="flex items-center gap-1" dir="ltr"><Phone className="w-3.5 h-3.5" />{supervisee.phone}</span>}
                 {supervisee?.email && <span className="flex items-center gap-1" dir="ltr"><Mail className="w-3.5 h-3.5" />{supervisee.email}</span>}
@@ -57,15 +57,15 @@ export function SuperviseeDetailPage() {
               {supervisee?.notes && <p className="text-sm text-gray-400 mt-1">{supervisee.notes}</p>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-violet-50 text-violet-700 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 bg-violet-50 text-violet-700 px-2.5 py-1.5 rounded-xl">
               <ClipboardList className="w-4 h-4" />
               <span className="font-semibold text-sm">{sessions.length}</span>
               <span className="text-xs">מפגשים</span>
             </div>
-            <button onClick={() => setShowEdit(true)} className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-sm">
+            <button onClick={() => setShowEdit(true)} className="btn-secondary flex items-center gap-1.5 py-1.5 px-2.5 md:px-3 text-sm">
               <Pencil className="w-3.5 h-3.5" />
-              עריכה
+              <span className="hidden sm:inline">עריכה</span>
             </button>
           </div>
         </div>
