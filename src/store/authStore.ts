@@ -12,12 +12,17 @@ interface AuthState {
 }
 
 async function fetchIsSuperuser(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("is_superuser")
-    .eq("id", userId)
-    .single();
-  return data?.is_superuser ?? false;
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("is_superuser")
+      .eq("id", userId)
+      .single();
+    if (error) return false;
+    return data?.is_superuser ?? false;
+  } catch {
+    return false;
+  }
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -27,12 +32,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
 
   init: () => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const isSuperuser = session?.user
-        ? await fetchIsSuperuser(session.user.id)
-        : false;
-      set({ session, user: session?.user ?? null, isSuperuser, loading: false });
-    });
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        // Always set loading:false — even if profile fetch fails
+        const isSuperuser = session?.user
+          ? await fetchIsSuperuser(session.user.id)
+          : false;
+        set({ session, user: session?.user ?? null, isSuperuser, loading: false });
+      })
+      .catch(() => {
+        set({ loading: false });
+      });
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
       const isSuperuser = session?.user
