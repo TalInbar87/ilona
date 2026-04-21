@@ -2,19 +2,21 @@ import { useState } from "react";
 import { Plus, ClipboardList, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTreatments } from "../../hooks/useTreatments";
-import { TreatmentFormModal } from "./TreatmentFormModal";
+import { TreatmentFormModal, type TreatmentPrefill } from "./TreatmentFormModal";
 import { formatDate } from "../../lib/utils";
 import type { Treatment } from "../../types";
 
 interface Props {
   patientId: string;
   onTreatmentCountChange: () => void;
+  autoOpen?: boolean;
+  prefill?: TreatmentPrefill;
 }
 
-export function TreatmentsTab({ patientId, onTreatmentCountChange }: Props) {
+export function TreatmentsTab({ patientId, onTreatmentCountChange, autoOpen = false, prefill }: Props) {
   const navigate = useNavigate();
   const { data: treatments, loading, refetch } = useTreatments(patientId);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(autoOpen);
   const [editTreatment, setEditTreatment] = useState<Treatment | null>(null);
 
   const handleSaved = () => {
@@ -65,6 +67,7 @@ export function TreatmentsTab({ patientId, onTreatmentCountChange }: Props) {
         <TreatmentFormModal
           patientId={patientId}
           treatment={editTreatment ?? undefined}
+          prefill={editTreatment ? undefined : prefill}
           onClose={() => { setShowForm(false); setEditTreatment(null); }}
           onSaved={handleSaved}
         />

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Search, Users, Archive } from "lucide-react";
 import { usePatients } from "../hooks/usePatients";
 import { PatientFormModal } from "../components/patients/PatientFormModal";
-import { calcAge, formatDate } from "../lib/utils";
+import { calcAgeLabel, formatDate } from "../lib/utils";
 
 export function PatientsPage() {
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ export function PatientsPage() {
                   >
                     <td className="px-4 py-3 font-medium text-gray-900">{p.full_name}</td>
                     <td className="px-4 py-3 text-gray-600 font-mono text-xs">{p.id_number}</td>
-                    <td className="px-4 py-3 text-gray-600">{calcAge(p.date_of_birth)} שנים</td>
+                    <td className="px-4 py-3 text-gray-600">{calcAgeLabel(p.date_of_birth)}</td>
                     <td className="px-4 py-3 text-gray-600">{formatDate(p.date_of_birth)}</td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-700">
@@ -132,7 +132,7 @@ export function PatientsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{p.full_name}</p>
-                  <p className="text-xs text-gray-500">{calcAge(p.date_of_birth)} שנים • {p.id_number}</p>
+                  <p className="text-xs text-gray-500">{calcAgeLabel(p.date_of_birth)} • {p.id_number}</p>
                 </div>
                 <span className="text-xs bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full shrink-0">
                   {p.treatment_count}

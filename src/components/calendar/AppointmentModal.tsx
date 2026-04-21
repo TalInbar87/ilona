@@ -3,12 +3,19 @@ import { X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { Appointment, AppointmentStatus } from "../../types";
 
+interface TreatmentPrefill {
+  session_date: string;
+  session_time: string;
+  duration_min: number;
+}
+
 interface Props {
   initialStart?: Date;
   initialEnd?: Date;
   appointment?: Appointment;
   onClose: () => void;
   onSaved: () => void;
+  onCompleted?: (patientId: string, prefill: TreatmentPrefill) => void;
 }
 
 function toLocalDatetimeValue(date: Date) {
@@ -16,7 +23,7 @@ function toLocalDatetimeValue(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function AppointmentModal({ initialStart, initialEnd, appointment, onClose, onSaved }: Props) {
+export function AppointmentModal({ initialStart, initialEnd, appointment, onClose, onSaved, onCompleted }: Props) {
   const [patients, setPatients] = useState<{ id: string; full_name: string }[]>([]);
   const [form, setForm] = useState({
     patient_id: appointment?.patient_id ?? "",
@@ -60,8 +67,20 @@ export function AppointmentModal({ initialStart, initialEnd, appointment, onClos
       ? await supabase.from("appointments").update(payload).eq("id", appointment.id)
       : await supabase.from("appointments").insert(payload);
 
-    if (err) setError(err.message);
-    else onSaved();
+    if (err) { setError(err.message); setSaving(false); return; }
+
+    // When marking as completed, redirect to treatment documentation
+    if (form.status === "completed" && onCompleted && form.patient_id) {
+      const start = new Date(form.start_time);
+      const end = new Date(form.end_time);
+      const durationMin = Math.round((end.getTime() - start.getTime()) / 60000);
+      const session_date = start.toISOString().split("T")[0];
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const session_time = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
+      onCompleted(form.patient_id, { session_date, session_time, duration_min: durationMin });
+    } else {
+      onSaved();
+    }
     setSaving(false);
   };
 

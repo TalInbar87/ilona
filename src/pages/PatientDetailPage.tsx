@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowRight,
   User,
@@ -12,19 +12,27 @@ import {
   ArchiveRestore,
 } from "lucide-react";
 import { usePatient } from "../hooks/usePatient";
-import { calcAge, formatDate } from "../lib/utils";
+import { calcAgeLabel, formatDate } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { PatientFormModal } from "../components/patients/PatientFormModal";
 import { DiagnosesTab } from "../components/diagnoses/DiagnosesTab";
 import { TreatmentsTab } from "../components/treatments/TreatmentsTab";
+import type { TreatmentPrefill } from "../components/treatments/TreatmentFormModal";
 
 type Tab = "details" | "diagnoses" | "treatments";
 
 export function PatientDetailPage() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Support auto-open treatment form from calendar (when appointment marked completed)
+  const locationState = location.state as { openNewTreatment?: boolean; prefill?: TreatmentPrefill } | null;
+  const autoOpenTreatment = !!locationState?.openNewTreatment;
+  const treatmentPrefill = locationState?.prefill;
+
   const { data: patient, loading, error, refetch } = usePatient(patientId);
-  const [activeTab, setActiveTab] = useState<Tab>("details");
+  const [activeTab, setActiveTab] = useState<Tab>(autoOpenTreatment ? "treatments" : "details");
   const [showEdit, setShowEdit] = useState(false);
   const [archiving, setArchiving] = useState(false);
 
@@ -94,7 +102,7 @@ export function PatientDetailPage() {
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
-                  {formatDate(patient.date_of_birth)} ({calcAge(patient.date_of_birth)} שנים)
+                  {formatDate(patient.date_of_birth)} ({calcAgeLabel(patient.date_of_birth)})
                 </span>
                 {patient.phone && (
                   <span className="flex items-center gap-1" dir="ltr">
@@ -166,7 +174,7 @@ export function PatientDetailPage() {
               <Detail label="שם מלא" value={patient.full_name} />
               <Detail label="מספר ת.ז." value={patient.id_number} mono />
               <Detail label="תאריך לידה" value={formatDate(patient.date_of_birth)} />
-              <Detail label="גיל" value={`${calcAge(patient.date_of_birth)} שנים`} />
+              <Detail label="גיל" value={calcAgeLabel(patient.date_of_birth)} />
               {patient.phone && <Detail label="טלפון" value={patient.phone} />}
               {patient.parent_name && <Detail label="שם הורה" value={patient.parent_name} />}
               {patient.notes && <Detail label="הערות" value={patient.notes} />}
@@ -176,7 +184,12 @@ export function PatientDetailPage() {
             <DiagnosesTab patientId={patient.id} />
           )}
           {activeTab === "treatments" && (
-            <TreatmentsTab patientId={patient.id} onTreatmentCountChange={refetch} />
+            <TreatmentsTab
+              patientId={patient.id}
+              onTreatmentCountChange={refetch}
+              autoOpen={autoOpenTreatment}
+              prefill={treatmentPrefill}
+            />
           )}
         </div>
       </div>

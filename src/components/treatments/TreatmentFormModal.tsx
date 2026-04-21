@@ -28,9 +28,16 @@ function serializeGoals(goals: GoalItem[]): string | null {
 }
 
 // ── Props ─────────────────────────────────────
+export interface TreatmentPrefill {
+  session_date?: string;
+  session_time?: string;
+  duration_min?: number;
+}
+
 interface Props {
   patientId: string;
   treatment?: Treatment;
+  prefill?: TreatmentPrefill;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -40,13 +47,13 @@ interface PendingFile {
   file: File;
 }
 
-export function TreatmentFormModal({ patientId, treatment, onClose, onSaved }: Props) {
+export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onSaved }: Props) {
   const today = new Date().toISOString().split("T")[0];
 
   const [form, setForm] = useState({
-    session_date: treatment?.session_date ?? today,
-    session_time: treatment?.session_time ?? "",
-    duration_min: treatment?.duration_min?.toString() ?? "",
+    session_date: treatment?.session_date ?? prefill?.session_date ?? today,
+    session_time: treatment?.session_time ?? prefill?.session_time ?? "",
+    duration_min: treatment?.duration_min?.toString() ?? prefill?.duration_min?.toString() ?? "",
     notes: treatment?.notes ?? "",
   });
 

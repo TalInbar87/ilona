@@ -1,4 +1,4 @@
-import { differenceInYears, format, parseISO } from "date-fns";
+import { differenceInYears, differenceInMonths, format, parseISO } from "date-fns";
 import { he } from "date-fns/locale";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -9,6 +9,22 @@ export function cn(...inputs: ClassValue[]) {
 
 export function calcAge(dateOfBirth: string): number {
   return differenceInYears(new Date(), parseISO(dateOfBirth));
+}
+
+/** Returns a precise age string in Hebrew: "3 שנים 2 חודשים", "8 חודשים", etc. */
+export function calcAgeLabel(dateOfBirth: string): string {
+  const dob = parseISO(dateOfBirth);
+  const now = new Date();
+  const totalMonths = differenceInMonths(now, dob);
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+
+  const yStr = years === 1 ? "שנה" : "שנים";
+  const mStr = months === 1 ? "חודש" : "חודשים";
+
+  if (years === 0) return `${totalMonths} ${totalMonths === 1 ? "חודש" : "חודשים"}`;
+  if (months === 0) return `${years} ${yStr}`;
+  return `${years} ${yStr} ${months} ${mStr}`;
 }
 
 export function formatDate(date: string | Date, fmt = "dd/MM/yyyy"): string {

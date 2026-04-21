@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -17,6 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function CalendarPage() {
+  const navigate = useNavigate();
   const [range, setRange] = useState<{ start: string; end: string } | null>(null);
   const { data: appointments, refetch } = useAppointments(range?.start, range?.end);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
@@ -94,6 +96,14 @@ export function CalendarPage() {
           appointment={selectedAppointment ?? undefined}
           onClose={() => { setSelectedSlot(null); setSelectedAppointment(null); }}
           onSaved={() => { setSelectedSlot(null); setSelectedAppointment(null); refetch(); }}
+          onCompleted={(patientId, prefill) => {
+            setSelectedSlot(null);
+            setSelectedAppointment(null);
+            refetch();
+            navigate(`/patients/${patientId}`, {
+              state: { openNewTreatment: true, prefill },
+            });
+          }}
         />
       )}
     </div>

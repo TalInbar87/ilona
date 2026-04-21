@@ -164,6 +164,7 @@ export type Database = {
           id: string;
           patient_id: string;
           title: string;
+          goals: string | null;
           description: string | null;
           diagnosed_at: string | null;
           created_at: string;
@@ -173,6 +174,7 @@ export type Database = {
           id?: string;
           patient_id: string;
           title: string;
+          goals?: string | null;
           description?: string | null;
           diagnosed_at?: string | null;
           created_at?: string;
@@ -182,6 +184,7 @@ export type Database = {
           id?: string;
           patient_id?: string;
           title?: string;
+          goals?: string | null;
           description?: string | null;
           diagnosed_at?: string | null;
           created_by?: string | null;
