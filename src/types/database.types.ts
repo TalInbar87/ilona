@@ -352,6 +352,22 @@ export type Database = {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          id: string;
+          is_superuser: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          is_superuser?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          is_superuser?: boolean;
+        };
+        Relationships: [];
+      };
       appointments: {
         Row: {
           id: string;
@@ -424,6 +440,10 @@ export type Database = {
       upsert_goal_bank: {
         Args: { p_text: string };
         Returns: void;
+      };
+      is_superuser: {
+        Args: Record<string, never>;
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

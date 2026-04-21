@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen } from "lucide-react";
+import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { cn } from "../../lib/utils";
 
@@ -15,6 +15,7 @@ const navItems = [
 export function AppShell() {
   const signOut = useAuthStore((s) => s.signOut);
   const user = useAuthStore((s) => s.user);
+  const isSuperuser = useAuthStore((s) => s.isSuperuser);
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -57,6 +58,28 @@ export function AppShell() {
             {label}
           </NavLink>
         ))}
+
+        {/* Superuser only */}
+        {isSuperuser && (
+          <>
+            <div className="border-t border-gray-100 my-1" />
+            <NavLink
+              to="/users"
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+                  isActive
+                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700"
+                )
+              }
+            >
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              ניהול משתמשים
+            </NavLink>
+          </>
+        )}
       </nav>
 
       {/* User + Sign out */}

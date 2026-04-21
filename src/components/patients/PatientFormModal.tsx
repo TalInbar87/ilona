@@ -54,11 +54,7 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
       : await supabase.from("patients").insert(payload);
 
     if (error) {
-      if (error.message.includes("id_number")) {
-        setErrors({ id_number: "ת.ז. זו כבר קיימת במערכת" });
-      } else {
-        setErrors({ general: error.message });
-      }
+      setErrors({ general: error.message });
       setSaving(false);
     } else {
       onSaved();
