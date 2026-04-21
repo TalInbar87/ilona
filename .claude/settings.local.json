@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npx create-vite@latest . --template react-ts)",
+      "Bash(npx --yes create-vite@6.5.0 . --template react-ts)",
+      "Bash(npx --yes create-vite@6.5.0 ilona-temp --template react-ts)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss@3 init -p)",
+      "Bash(npx shadcn@latest init --base-color zinc --yes)",
+      "Bash(npx shadcn@latest init --yes)",
+      "Bash(printf '0\\\\n\\\\n\\\\n\\\\n\\\\n\\\\n\\\\n')",
+      "Bash(npx shadcn@latest init)",
+      "Bash(npm run:*)",
+      "Bash(chmod +x /Users/talinbar/Documents/Ilona/init.mjs)",
+      "Bash(node /Users/talinbar/Documents/Ilona/init.mjs --help)",
+      "Bash(node /Users/talinbar/Documents/Ilona/init.mjs)",
+      "Bash(node -e \"const url='https://utvpcwntzjxyewsbjpho.supabase.co'; console.log\\(url.match\\(/https:\\\\/\\\\/\\([^.]+\\)\\\\./\\)?.[1]\\)\")",
+      "Bash(chmod +x /Users/talinbar/Documents/Ilona/deploy.sh)"
+    ]
+  }
+}
