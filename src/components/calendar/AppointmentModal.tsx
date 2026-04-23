@@ -207,11 +207,14 @@ export function AppointmentModal({ initialStart, initialEnd, appointment, onClos
               href={mailtoHref}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-xl px-4 py-2.5 transition-colors w-full"
+              className="flex items-center justify-center gap-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 active:bg-sky-700 rounded-xl px-4 py-2.5 transition-colors w-full shadow-sm"
             >
               <Mail className="w-4 h-4 shrink-0" />
-              <span>שלח זימון למייל של {selectedPatient?.full_name}</span>
+              <span>שלח זימון למייל — {selectedPatient?.full_name}</span>
             </a>
+          )}
+          {selectedPatient && !selectedPatient.email && form.patient_id && (
+            <p className="text-xs text-gray-400 text-center">אין כתובת מייל למטופל זה</p>
           )}
 
           <div className="flex gap-3 pt-2">
