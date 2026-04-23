@@ -9,6 +9,7 @@ import {
   Pencil,
   CheckSquare,
   Square,
+  Wrench,
 } from "lucide-react";
 import { useTreatment } from "../hooks/useTreatment";
 import { formatDate, formatDateTime } from "../lib/utils";
@@ -142,6 +143,19 @@ export function TreatmentDetailPage() {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Tools */}
+      {treatment.tools && (
+        <div className="card p-5 mb-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+            <Wrench className="w-4 h-4 text-violet-400" />
+            עזרים לטיפול
+          </h3>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+            {treatment.tools}
+          </p>
         </div>
       )}
 

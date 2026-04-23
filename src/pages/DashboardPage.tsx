@@ -1,15 +1,31 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Calendar, Activity, Clock } from "lucide-react";
+import { Users, Calendar, Activity, Clock, Stethoscope, Users2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { formatDateTime } from "../lib/utils";
+import { formatDateTime, formatDate } from "../lib/utils";
 import type { AppointmentWithPatient } from "../hooks/useAppointments";
+import type { Meeting } from "../types";
+
+// ── Daily schedule helpers ────────────────────────────────────────────────────
+type DayItem =
+  | { kind: "appointment"; time: string; data: AppointmentWithPatient }
+  | { kind: "meeting"; time: string; data: Meeting };
+
+function todayRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ patients: 0, treatments: 0 });
   const [upcoming, setUpcoming] = useState<AppointmentWithPatient[]>([]);
+  const [todayItems, setTodayItems] = useState<DayItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [todayLoading, setTodayLoading] = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -37,9 +53,125 @@ export function DashboardPage() {
     fetchAll();
   }, []);
 
+  // Today's schedule (appointments + meetings)
+  useEffect(() => {
+    const fetchToday = async () => {
+      const { start, end } = todayRange();
+      const [{ data: appts }, { data: meets }] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("*, patients(full_name)")
+          .in("status", ["scheduled", "completed"])
+          .gte("start_time", start)
+          .lte("start_time", end)
+          .order("start_time"),
+        supabase
+          .from("meetings")
+          .select("*")
+          .gte("start_time", start)
+          .lte("start_time", end)
+          .order("start_time"),
+      ]);
+
+      const items: DayItem[] = [
+        ...((appts ?? []) as AppointmentWithPatient[]).map((a) => ({
+          kind: "appointment" as const,
+          time: a.start_time,
+          data: a,
+        })),
+        ...((meets ?? []) as Meeting[]).map((m) => ({
+          kind: "meeting" as const,
+          time: m.start_time,
+          data: m,
+        })),
+      ];
+      items.sort((a, b) => a.time.localeCompare(b.time));
+      setTodayItems(items);
+      setTodayLoading(false);
+    };
+    fetchToday();
+  }, []);
+
+  const todayLabel = formatDate(new Date().toISOString());
+
   return (
     <div className="p-4 md:p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-5 md:mb-6">שלום!</h1>
+
+      {/* Daily planning */}
+      <div className="card p-5 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-sky-600" />
+            תכנון יומי — {todayLabel}
+          </h2>
+          <button
+            onClick={() => navigate("/calendar")}
+            className="text-xs text-sky-600 hover:text-sky-700"
+          >
+            לוח שנה מלא ←
+          </button>
+        </div>
+
+        {todayLoading ? (
+          <div className="space-y-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : todayItems.length === 0 ? (
+          <div className="text-center py-6 text-gray-400">
+            <Clock className="w-8 h-8 mx-auto mb-2 text-gray-200" />
+            <p className="text-sm">אין טיפולים או פגישות מתוכננים להיום</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {todayItems.map((item) =>
+              item.kind === "appointment" ? (
+                <div
+                  key={`appt-${item.data.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/patients/${item.data.patient_id}`)}
+                >
+                  <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Stethoscope className="w-4 h-4 text-sky-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {(item.data as AppointmentWithPatient).patients?.full_name ?? "—"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(item.data.start_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                      {" – "}
+                      {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                  {item.data.status === "completed" && (
+                    <span className="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 shrink-0">בוצע</span>
+                  )}
+                </div>
+              ) : (
+                <div
+                  key={`meet-${item.data.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl"
+                >
+                  <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Users2 className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{item.data.title}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(item.data.start_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                      {" – "}
+                      {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">

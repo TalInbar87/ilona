@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Upload, Paperclip, Trash2, CheckSquare, Square } from "lucide-react";
+import { X, Upload, Paperclip, Trash2, CheckSquare, Square, Wrench } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
 import { GoalPicker } from "../goals/GoalPicker";
@@ -55,6 +55,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
     session_date: treatment?.session_date ?? prefill?.session_date ?? today,
     session_time: treatment?.session_time ?? prefill?.session_time ?? "",
     duration_min: treatment?.duration_min?.toString() ?? prefill?.duration_min?.toString() ?? "",
+    tools: treatment?.tools ?? "",
     notes: treatment?.notes ?? "",
   });
 
@@ -137,6 +138,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       session_time: form.session_time || null,
       duration_min: form.duration_min ? parseInt(form.duration_min) : null,
       summary: serializeGoals(goals),
+      tools: form.tools.trim() || null,
       notes: form.notes.trim() || null,
     };
 
@@ -244,6 +246,21 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
             )}
 
             <GoalPicker onAdd={addGoal} colorScheme="sky" />
+          </div>
+
+          {/* Tools / Aids */}
+          <div>
+            <label className="label-base flex items-center gap-1.5">
+              <Wrench className="w-4 h-4 text-violet-400" />
+              עזרים לטיפול
+            </label>
+            <textarea
+              value={form.tools}
+              onChange={(e) => setForm({ ...form, tools: e.target.value })}
+              className="input-base resize-none"
+              rows={2}
+              placeholder="כרטיסיות, משחקים, חומרים, אפליקציות..."
+            />
           </div>
 
           {/* Notes */}

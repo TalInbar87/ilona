@@ -35,6 +35,9 @@ export type AppointmentUpdate =
 
 export type AppointmentStatus = Appointment["status"];
 
+export type Meeting = Database["public"]["Tables"]["meetings"]["Row"];
+export type MeetingInsert = Database["public"]["Tables"]["meetings"]["Insert"];
+
 export type Supervisee = Database["public"]["Tables"]["supervisees"]["Row"];
 export type SuperviseeInsert = Database["public"]["Tables"]["supervisees"]["Insert"];
 export type SuperviseeUpdate = Database["public"]["Tables"]["supervisees"]["Update"];

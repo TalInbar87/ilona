@@ -250,6 +250,7 @@ export type Database = {
           session_time: string | null;
           notes: string | null;
           summary: string | null;
+          tools: string | null;
           duration_min: number | null;
           created_at: string;
           updated_at: string;
@@ -262,6 +263,7 @@ export type Database = {
           session_time?: string | null;
           notes?: string | null;
           summary?: string | null;
+          tools?: string | null;
           duration_min?: number | null;
           created_at?: string;
           updated_at?: string;
@@ -274,6 +276,7 @@ export type Database = {
           session_time?: string | null;
           notes?: string | null;
           summary?: string | null;
+          tools?: string | null;
           duration_min?: number | null;
           updated_at?: string;
           created_by?: string | null;
@@ -349,6 +352,30 @@ export type Database = {
         Update: {
           text?: string;
           use_count?: number;
+        };
+        Relationships: [];
+      };
+      meetings: {
+        Row: {
+          id: string;
+          title: string;
+          start_time: string;
+          end_time: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          start_time: string;
+          end_time: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          title?: string;
+          start_time?: string;
+          end_time?: string;
         };
         Relationships: [];
       };
