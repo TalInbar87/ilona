@@ -11,7 +11,6 @@ import {
   Activity,
   Archive,
   ArchiveRestore,
-  Ear,
 } from "lucide-react";
 import { usePatient } from "../hooks/usePatient";
 import { calcAgeLabel, formatDate } from "../lib/utils";
@@ -196,36 +195,16 @@ export function PatientDetailPage() {
               {patient.email && <Detail label="מייל" value={patient.email} href={`mailto:${patient.email}`} />}
               {patient.parent_name && <Detail label="שם הורה" value={patient.parent_name} />}
               {patient.notes && <Detail label="הערות" value={patient.notes} />}
-
-              {/* Hearing test */}
-              <div className="pt-2 mt-2 border-t border-gray-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <Ear className="w-4 h-4 text-sky-600" />
-                  <span className="text-sm font-medium text-gray-700">בדיקת שמיעה</span>
-                </div>
-                {patient.hearing_test_done ? (
-                  <div className="bg-sky-50 rounded-xl p-3 space-y-2">
-                    <div className="flex items-center gap-1.5 text-sm text-sky-700 font-medium">
-                      <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" />
-                      בוצעה
-                      {patient.hearing_test_date && (
-                        <span className="text-gray-500 font-normal">
-                          — {formatDate(patient.hearing_test_date)}
-                        </span>
-                      )}
-                    </div>
-                    {patient.hearing_test_results && (
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{patient.hearing_test_results}</p>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-sm text-gray-400">לא בוצעה</span>
-                )}
-              </div>
             </div>
           )}
           {activeTab === "diagnoses" && (
-            <DiagnosesTab patientId={patient.id} />
+            <DiagnosesTab
+              patientId={patient.id}
+              hearingTestDone={patient.hearing_test_done}
+              hearingTestDate={patient.hearing_test_date}
+              hearingTestResults={patient.hearing_test_results}
+              onHearingTestSaved={refetch}
+            />
           )}
           {activeTab === "treatments" && (
             <TreatmentsTab
