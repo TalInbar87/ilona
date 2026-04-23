@@ -81,11 +81,15 @@ Deno.serve(async (req) => {
 
       const { data: profiles } = await admin
         .from("profiles")
-        .select("id, is_superuser");
+        .select("id, is_superuser, first_name, last_name");
 
-      const profileMap: Record<string, boolean> = {};
+      const profileMap: Record<string, { is_superuser: boolean; first_name: string | null; last_name: string | null }> = {};
       for (const p of profiles ?? []) {
-        profileMap[p.id] = p.is_superuser;
+        profileMap[p.id] = {
+          is_superuser: p.is_superuser,
+          first_name: p.first_name ?? null,
+          last_name: p.last_name ?? null,
+        };
       }
 
       const users = authData.users.map((u) => ({
@@ -93,7 +97,9 @@ Deno.serve(async (req) => {
         email: u.email ?? "",
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at ?? null,
-        is_superuser: profileMap[u.id] ?? false,
+        is_superuser: profileMap[u.id]?.is_superuser ?? false,
+        first_name: profileMap[u.id]?.first_name ?? null,
+        last_name: profileMap[u.id]?.last_name ?? null,
       }));
 
       return json({ users });
@@ -101,7 +107,10 @@ Deno.serve(async (req) => {
 
     // CREATE NEW USER WITH EMAIL + PASSWORD (no invite email)
     if (action === "create") {
-      const { email, password } = body as { email?: string; password?: string };
+      const { email, password, first_name, last_name } = body as {
+        email?: string; password?: string;
+        first_name?: string; last_name?: string;
+      };
       if (!email?.trim()) return json({ error: "נדרש מייל" }, 400);
       if (!password || password.length < 6)
         return json({ error: "סיסמה חייבת להכיל לפחות 6 תווים" }, 400);
@@ -109,10 +118,18 @@ Deno.serve(async (req) => {
       const { data, error: createErr } = await admin.auth.admin.createUser({
         email: email.trim(),
         password,
-        email_confirm: true, // skip confirmation email — user can log in immediately
-        app_metadata: { force_password_change: true }, // must change on first login
+        email_confirm: true,
+        app_metadata: { force_password_change: true },
       });
       if (createErr) throw createErr;
+
+      // Save name to profile (profile row created by DB trigger on auth.users insert)
+      if (first_name?.trim() || last_name?.trim()) {
+        await admin.from("profiles").update({
+          first_name: first_name?.trim() || null,
+          last_name: last_name?.trim() || null,
+        }).eq("id", data.user.id);
+      }
 
       return json({ user: { id: data.user.id, email: data.user.email } });
     }

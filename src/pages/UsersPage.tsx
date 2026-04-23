@@ -22,6 +22,8 @@ interface AppUser {
   created_at: string;
   last_sign_in_at: string | null;
   is_superuser: boolean;
+  first_name: string | null;
+  last_name: string | null;
 }
 
 async function callManageUsers(body: object) {
@@ -50,6 +52,8 @@ export function UsersPage() {
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteFirstName, setInviteFirstName] = useState("");
+  const [inviteLastName, setInviteLastName] = useState("");
   const [invitePassword, setInvitePassword] = useState("");
   const [invitePasswordConfirm, setInvitePasswordConfirm] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -94,9 +98,17 @@ export function UsersPage() {
     setInviteError(null);
     setInviteSuccess(false);
     try {
-      await callManageUsers({ action: "create", email: inviteEmail, password: invitePassword });
+      await callManageUsers({
+        action: "create",
+        email: inviteEmail,
+        password: invitePassword,
+        first_name: inviteFirstName.trim() || undefined,
+        last_name: inviteLastName.trim() || undefined,
+      });
       setInviteSuccess(true);
       setInviteEmail("");
+      setInviteFirstName("");
+      setInviteLastName("");
       setInvitePassword("");
       setInvitePasswordConfirm("");
       fetchUsers();
@@ -164,7 +176,7 @@ export function UsersPage() {
           </div>
         </div>
         <button
-          onClick={() => { setInviteOpen(true); setInviteSuccess(false); setInviteError(null); setInvitePassword(""); setInvitePasswordConfirm(""); }}
+          onClick={() => { setInviteOpen(true); setInviteSuccess(false); setInviteError(null); setInviteEmail(""); setInviteFirstName(""); setInviteLastName(""); setInvitePassword(""); setInvitePasswordConfirm(""); }}
           className="btn-primary flex items-center gap-2"
         >
           <UserPlus className="w-4 h-4" />
@@ -201,15 +213,18 @@ export function UsersPage() {
             >
               {/* Avatar */}
               <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-700 font-bold text-sm">
-                {u.email[0].toUpperCase()}
+                {u.first_name ? u.first_name[0].toUpperCase() : u.email[0].toUpperCase()}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium text-gray-900 truncate">
-                    {u.email}
+                    {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
                   </span>
+                  {(u.first_name || u.last_name) && (
+                    <span className="text-xs text-gray-400 truncate">{u.email}</span>
+                  )}
                   {u.id === currentUser?.id && (
                     <span className="text-xs bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">
                       אתה
@@ -325,11 +340,36 @@ export function UsersPage() {
               </div>
             ) : (
               <form onSubmit={handleInvite} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label-base">שם פרטי</label>
+                    <input
+                      type="text"
+                      autoFocus
+                      value={inviteFirstName}
+                      onChange={(e) => setInviteFirstName(e.target.value)}
+                      className="input-base"
+                      placeholder="ישראל"
+                      disabled={inviting}
+                    />
+                  </div>
+                  <div>
+                    <label className="label-base">שם משפחה</label>
+                    <input
+                      type="text"
+                      value={inviteLastName}
+                      onChange={(e) => setInviteLastName(e.target.value)}
+                      className="input-base"
+                      placeholder="ישראלי"
+                      disabled={inviting}
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="label-base">כתובת מייל</label>
+                  <label className="label-base">כתובת מייל *</label>
                   <input
                     type="email"
-                    autoFocus
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     className="input-base"
