@@ -72,7 +72,7 @@ export function PatientDetailPage() {
 
   const tabs = [
     { id: "details" as Tab, label: "פרטים אישיים" },
-    { id: "diagnoses" as Tab, label: "אבחונים וסיכומים" },
+    { id: "diagnoses" as Tab, label: "בדיקות שמיעה ואבחונים" },
     { id: "treatments" as Tab, label: "תיק טיפול" },
   ];
 

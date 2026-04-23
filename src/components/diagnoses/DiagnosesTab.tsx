@@ -65,7 +65,7 @@ export function DiagnosesTab({ patientId }: Props) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-semibold text-gray-700">אבחונים וסיכומים קודמים</h3>
+        <h3 className="text-sm font-semibold text-gray-700">בדיקות שמיעה ואבחונים קודמים</h3>
         <button onClick={() => setShowForm(!showForm)} className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-xs">
           <Plus className="w-3.5 h-3.5" />
           הוספת אבחון
