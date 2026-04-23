@@ -23,6 +23,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
           created_by: string | null;
+          hearing_test_done: boolean;
+          hearing_test_date: string | null;
+          hearing_test_results: string | null;
         };
         Insert: {
           id?: string;
@@ -37,6 +40,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
+          hearing_test_done?: boolean;
+          hearing_test_date?: string | null;
+          hearing_test_results?: string | null;
         };
         Update: {
           id?: string;
@@ -50,6 +56,9 @@ export type Database = {
           archived_at?: string | null;
           updated_at?: string;
           created_by?: string | null;
+          hearing_test_done?: boolean;
+          hearing_test_date?: string | null;
+          hearing_test_results?: string | null;
         };
         Relationships: [];
       };
@@ -466,6 +475,9 @@ export type Database = {
           created_by: string | null;
           age: number;
           treatment_count: number;
+          hearing_test_done: boolean;
+          hearing_test_date: string | null;
+          hearing_test_results: string | null;
         };
         Relationships: [];
       };

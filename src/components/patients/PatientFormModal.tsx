@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Ear } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { validateIsraeliId, calcAge } from "../../lib/utils";
 import type { PatientWithStats } from "../../types";
@@ -19,6 +19,9 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
     email: patient?.email ?? "",
     parent_name: patient?.parent_name ?? "",
     notes: patient?.notes ?? "",
+    hearing_test_done: patient?.hearing_test_done ?? false,
+    hearing_test_date: patient?.hearing_test_date ?? "",
+    hearing_test_results: patient?.hearing_test_results ?? "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -49,6 +52,9 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
       email: form.email.trim() || null,
       parent_name: form.parent_name.trim() || null,
       notes: form.notes.trim() || null,
+      hearing_test_done: form.hearing_test_done,
+      hearing_test_date: form.hearing_test_done && form.hearing_test_date ? form.hearing_test_date : null,
+      hearing_test_results: form.hearing_test_done && form.hearing_test_results.trim() ? form.hearing_test_results.trim() : null,
     };
 
     const { error } = patient
@@ -173,6 +179,47 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
               rows={3}
               placeholder="הערות נוספות..."
             />
+          </div>
+
+          {/* Hearing test section */}
+          <div className="rounded-xl border border-gray-200 p-4 space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.hearing_test_done}
+                onChange={(e) => setForm({ ...form, hearing_test_done: e.target.checked })}
+                className="w-4 h-4 rounded accent-sky-600 cursor-pointer"
+              />
+              <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <Ear className="w-4 h-4 text-sky-600" />
+                בוצעה בדיקת שמיעה
+              </span>
+            </label>
+
+            {form.hearing_test_done && (
+              <div className="space-y-3 pr-7">
+                <div>
+                  <label className="label-base">תאריך ביצוע הבדיקה</label>
+                  <input
+                    type="date"
+                    value={form.hearing_test_date}
+                    onChange={(e) => setForm({ ...form, hearing_test_date: e.target.value })}
+                    className="input-base"
+                    max={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+                <div>
+                  <label className="label-base">תוצאות הבדיקה</label>
+                  <textarea
+                    value={form.hearing_test_results}
+                    onChange={(e) => setForm({ ...form, hearing_test_results: e.target.value })}
+                    className="input-base resize-none"
+                    rows={3}
+                    placeholder="תאר את תוצאות בדיקת השמיעה..."
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-2">
