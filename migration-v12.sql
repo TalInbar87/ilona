@@ -19,14 +19,15 @@ CREATE POLICY "authenticated_all" ON hearing_tests
 
 GRANT ALL ON hearing_tests TO authenticated;
 
--- 2. Drop old single-value columns from patients
+-- 2. Drop view first (depends on hearing_test columns), then drop columns
+DROP VIEW IF EXISTS patients_with_stats;
+
 ALTER TABLE patients
   DROP COLUMN IF EXISTS hearing_test_done,
   DROP COLUMN IF EXISTS hearing_test_date,
   DROP COLUMN IF EXISTS hearing_test_results;
 
--- 3. Rebuild view (columns removed)
-DROP VIEW IF EXISTS patients_with_stats;
+-- 3. Rebuild view
 CREATE VIEW patients_with_stats
   WITH (security_invoker = on)
 AS
