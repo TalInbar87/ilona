@@ -23,9 +23,6 @@ export type Database = {
           created_at: string;
           updated_at: string;
           created_by: string | null;
-          hearing_test_done: boolean;
-          hearing_test_date: string | null;
-          hearing_test_results: string | null;
         };
         Insert: {
           id?: string;
@@ -40,9 +37,6 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
-          hearing_test_done?: boolean;
-          hearing_test_date?: string | null;
-          hearing_test_results?: string | null;
         };
         Update: {
           id?: string;
@@ -56,11 +50,42 @@ export type Database = {
           archived_at?: string | null;
           updated_at?: string;
           created_by?: string | null;
-          hearing_test_done?: boolean;
-          hearing_test_date?: string | null;
-          hearing_test_results?: string | null;
         };
         Relationships: [];
+      };
+      hearing_tests: {
+        Row: {
+          id: string;
+          patient_id: string;
+          test_date: string | null;
+          results: string | null;
+          notes: string | null;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          test_date?: string | null;
+          results?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          test_date?: string | null;
+          results?: string | null;
+          notes?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "hearing_tests_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       supervisees: {
         Row: {
@@ -475,9 +500,6 @@ export type Database = {
           created_by: string | null;
           age: number;
           treatment_count: number;
-          hearing_test_done: boolean;
-          hearing_test_date: string | null;
-          hearing_test_results: string | null;
         };
         Relationships: [];
       };

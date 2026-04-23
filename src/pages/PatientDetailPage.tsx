@@ -17,10 +17,11 @@ import { calcAgeLabel, formatDate } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { PatientFormModal } from "../components/patients/PatientFormModal";
 import { DiagnosesTab } from "../components/diagnoses/DiagnosesTab";
+import { HearingTestsTab } from "../components/hearingTests/HearingTestsTab";
 import { TreatmentsTab } from "../components/treatments/TreatmentsTab";
 import type { TreatmentPrefill } from "../components/treatments/TreatmentFormModal";
 
-type Tab = "details" | "diagnoses" | "treatments";
+type Tab = "details" | "hearing" | "diagnoses" | "treatments";
 
 export function PatientDetailPage() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -72,7 +73,8 @@ export function PatientDetailPage() {
 
   const tabs = [
     { id: "details" as Tab, label: "פרטים אישיים" },
-    { id: "diagnoses" as Tab, label: "בדיקות שמיעה ואבחונים" },
+    { id: "hearing" as Tab, label: "בדיקות שמיעה" },
+    { id: "diagnoses" as Tab, label: "אבחונים" },
     { id: "treatments" as Tab, label: "תיק טיפול" },
   ];
 
@@ -197,14 +199,11 @@ export function PatientDetailPage() {
               {patient.notes && <Detail label="הערות" value={patient.notes} />}
             </div>
           )}
+          {activeTab === "hearing" && (
+            <HearingTestsTab patientId={patient.id} />
+          )}
           {activeTab === "diagnoses" && (
-            <DiagnosesTab
-              patientId={patient.id}
-              hearingTestDone={patient.hearing_test_done}
-              hearingTestDate={patient.hearing_test_date}
-              hearingTestResults={patient.hearing_test_results}
-              onHearingTestSaved={refetch}
-            />
+            <DiagnosesTab patientId={patient.id} />
           )}
           {activeTab === "treatments" && (
             <TreatmentsTab

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, FileText, Upload, CheckSquare, Square, Trash2, Pencil, Check, Ear } from "lucide-react";
+import { Plus, FileText, Upload, CheckSquare, Square, Trash2, Pencil, Check } from "lucide-react";
 import { useDiagnoses } from "../../hooks/useDiagnoses";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { formatDate } from "../../lib/utils";
@@ -20,15 +20,9 @@ function serializeGoals(goals: GoalItem[]): string | null {
   return n.length ? JSON.stringify(n) : null;
 }
 
-interface Props {
-  patientId: string;
-  hearingTestDone?: boolean;
-  hearingTestDate?: string | null;
-  hearingTestResults?: string | null;
-  onHearingTestSaved?: () => void;
-}
+interface Props { patientId: string; }
 
-export function DiagnosesTab({ patientId, hearingTestDone, hearingTestDate, hearingTestResults, onHearingTestSaved }: Props) {
+export function DiagnosesTab({ patientId }: Props) {
   const { data: diagnoses, loading, refetch } = useDiagnoses(patientId);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", diagnosed_at: "" });
@@ -69,17 +63,8 @@ export function DiagnosesTab({ patientId, hearingTestDone, hearingTestDate, hear
 
   return (
     <div className="space-y-4">
-      {/* Hearing test card */}
-      <HearingTestCard
-        patientId={patientId}
-        done={hearingTestDone ?? false}
-        date={hearingTestDate ?? null}
-        results={hearingTestResults ?? null}
-        onSaved={onHearingTestSaved}
-      />
-
       {/* Diagnoses header */}
-      <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+      <div className="flex justify-between items-center">
         <h3 className="text-sm font-semibold text-gray-700">אבחונים וסיכומים</h3>
         <button onClick={() => setShowForm(!showForm)} className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-xs">
           <Plus className="w-3.5 h-3.5" />
@@ -383,135 +368,3 @@ function DiagnosisCard({ diagnosis, patientId, onDelete, onRefetch }: {
   );
 }
 
-// ── Hearing test card ─────────────────────────────────────────────────────────
-function HearingTestCard({
-  patientId,
-  done,
-  date,
-  results,
-  onSaved,
-}: {
-  patientId: string;
-  done: boolean;
-  date: string | null;
-  results: string | null;
-  onSaved?: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    done,
-    date: date ?? "",
-    results: results ?? "",
-  });
-  const [saving, setSaving] = useState(false);
-
-  const startEdit = () => {
-    setForm({ done, date: date ?? "", results: results ?? "" });
-    setEditing(true);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    await supabase.from("patients").update({
-      hearing_test_done: form.done,
-      hearing_test_date: form.done && form.date ? form.date : null,
-      hearing_test_results: form.done && form.results.trim() ? form.results.trim() : null,
-    }).eq("id", patientId);
-    setSaving(false);
-    setEditing(false);
-    onSaved?.();
-  };
-
-  return (
-    <div className="rounded-xl border border-sky-100 bg-sky-50/50 overflow-hidden">
-      {/* Title bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-sky-100">
-        <div className="flex items-center gap-2">
-          <Ear className="w-4 h-4 text-sky-600" />
-          <span className="text-sm font-semibold text-sky-800">בדיקת שמיעה</span>
-        </div>
-        {!editing && (
-          <button
-            onClick={startEdit}
-            className="p-1.5 hover:bg-sky-100 rounded-lg text-sky-400 hover:text-sky-600 transition-colors"
-            title="עריכה"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-
-      {/* View mode */}
-      {!editing && (
-        <div className="px-4 py-3">
-          {done ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
-                <span className="text-sm font-medium text-sky-700">
-                  בוצעה{date ? ` — ${formatDate(date)}` : ""}
-                </span>
-              </div>
-              {results && (
-                <p className="text-sm text-gray-700 whitespace-pre-wrap pr-4">{results}</p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400">לא בוצעה עדיין</p>
-          )}
-        </div>
-      )}
-
-      {/* Edit mode */}
-      {editing && (
-        <form onSubmit={handleSave} className="px-4 py-3 space-y-3">
-          <label className="flex items-center gap-2.5 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={form.done}
-              onChange={(e) => setForm({ ...form, done: e.target.checked })}
-              className="w-4 h-4 rounded accent-sky-600 cursor-pointer"
-            />
-            <span className="text-sm text-gray-700">בוצעה בדיקת שמיעה</span>
-          </label>
-
-          {form.done && (
-            <>
-              <div>
-                <label className="label-base text-xs">תאריך ביצוע</label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  className="input-base text-sm"
-                  max={new Date().toISOString().split("T")[0]}
-                />
-              </div>
-              <div>
-                <label className="label-base text-xs">תוצאות הבדיקה</label>
-                <textarea
-                  value={form.results}
-                  onChange={(e) => setForm({ ...form, results: e.target.value })}
-                  className="input-base text-sm resize-none"
-                  rows={3}
-                  placeholder="תאר את תוצאות הבדיקה..."
-                />
-              </div>
-            </>
-          )}
-
-          <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="btn-primary text-xs py-1.5 px-3 disabled:opacity-60 flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5" />
-              {saving ? "שומר..." : "שמירה"}
-            </button>
-            <button type="button" onClick={() => setEditing(false)} className="btn-secondary text-xs py-1.5 px-3">
-              ביטול
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
-  );
-}
