@@ -1,6 +1,8 @@
 -- Migration v10: Rebuild patients_with_stats view to include email column
 -- (PostgreSQL views with p.* do not auto-refresh when columns are added to the base table)
-CREATE OR REPLACE VIEW patients_with_stats
+-- Must DROP first because CREATE OR REPLACE cannot change column ordering
+DROP VIEW IF EXISTS patients_with_stats;
+CREATE VIEW patients_with_stats
   WITH (security_invoker = on)
 AS
 SELECT
