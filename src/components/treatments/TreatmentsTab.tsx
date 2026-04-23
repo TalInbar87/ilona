@@ -86,7 +86,10 @@ function TreatmentRow({
   onEdit: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:border-sky-200 hover:bg-sky-50 transition-colors group">
+    <div
+      className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:border-sky-200 hover:bg-sky-50 transition-colors group cursor-pointer"
+      onClick={onView}
+    >
       <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
         <ClipboardList className="w-5 h-5 text-sky-600" />
       </div>
@@ -99,20 +102,14 @@ function TreatmentRow({
           <p className="text-xs text-gray-400">{treatment.duration_min} דקות</p>
         )}
       </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 shrink-0">
         <button
-          onClick={onEdit}
-          className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1.5 rounded hover:bg-gray-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
         >
           עריכה
         </button>
-        <button
-          onClick={onView}
-          className="text-xs text-sky-600 hover:text-sky-700 px-2 py-1 rounded hover:bg-sky-100 flex items-center gap-1"
-        >
-          פתח
-          <ChevronLeft className="w-3 h-3" />
-        </button>
+        <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-sky-500 transition-colors" />
       </div>
     </div>
   );

@@ -206,8 +206,9 @@ export function PatientDetailPage() {
 
 function Detail({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex gap-3 py-2 border-b border-gray-50 last:border-0">
-      <span className="text-sm text-gray-500 w-32 shrink-0">{label}</span>
+    <div className="py-2 border-b border-gray-50 last:border-0 sm:flex sm:gap-3">
+      <span className="block text-xs text-gray-400 mb-0.5 sm:hidden">{label}</span>
+      <span className="hidden sm:block text-sm text-gray-500 w-32 shrink-0">{label}</span>
       <span className={`text-sm text-gray-900 ${mono ? "font-mono" : ""}`}>{value}</span>
     </div>
   );

@@ -104,7 +104,7 @@ export function DiagnosesTab({ patientId }: Props) {
                       {g.done ? <CheckSquare className="w-4 h-4 text-sky-500" /> : <Square className="w-4 h-4" />}
                     </button>
                     <span className={`text-sm flex-1 ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>{g.text}</span>
-                    <button type="button" onClick={() => removeGoal(g.id)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400">
+                    <button type="button" onClick={() => removeGoal(g.id)} className="text-gray-300 hover:text-red-400">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </li>

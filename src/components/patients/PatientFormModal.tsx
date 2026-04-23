@@ -93,7 +93,7 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
             {errors.full_name && <p className="text-red-500 text-xs mt-1">{errors.full_name}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label-base">תאריך לידה *</label>
               <input
