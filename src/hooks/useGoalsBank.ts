@@ -27,24 +27,39 @@ export function useGoalsBank() {
   const addToBank = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    await supabase.rpc("upsert_goal_bank", { p_text: trimmed });
-    // Optimistic update so the dropdown reflects the change immediately
-    setData((prev) => {
-      const existing = prev.find(
-        (g) => g.text.trim().toLowerCase() === trimmed.toLowerCase()
+
+    // Check if goal already exists (case-insensitive) directly in DB
+    const { data: existing } = await supabase
+      .from("treatment_goals_bank")
+      .select("id, use_count")
+      .ilike("text", trimmed)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("treatment_goals_bank")
+        .update({ use_count: existing.use_count + 1 })
+        .eq("id", existing.id);
+
+      // Optimistic update — increment
+      setData((prev) =>
+        prev
+          .map((g) => g.id === existing.id ? { ...g, use_count: g.use_count + 1 } : g)
+          .sort((a, b) => b.use_count - a.use_count)
       );
-      if (existing) {
-        return prev
-          .map((g) =>
-            g.id === existing.id ? { ...g, use_count: g.use_count + 1 } : g
-          )
-          .sort((a, b) => b.use_count - a.use_count);
+    } else {
+      const { data: inserted } = await supabase
+        .from("treatment_goals_bank")
+        .insert({ text: trimmed })
+        .select("id, text, use_count")
+        .single();
+
+      if (inserted) {
+        // Optimistic update — prepend
+        setData((prev) => [inserted, ...prev]);
       }
-      return [
-        { id: crypto.randomUUID(), text: trimmed, use_count: 1 },
-        ...prev,
-      ];
-    });
+    }
   };
 
   return { data, loading, addToBank, refetch };
