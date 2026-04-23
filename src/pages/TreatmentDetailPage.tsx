@@ -177,7 +177,7 @@ export function TreatmentDetailPage() {
         <div className="card p-5 mb-4 border-r-4 border-amber-300">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
             <Lightbulb className="w-4 h-4 text-amber-400" />
-            רעיונות לטיפול הבא
+            תכנון טיפול הבא
           </h3>
           <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
             {treatment.next_ideas}

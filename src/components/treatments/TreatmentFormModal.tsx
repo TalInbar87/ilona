@@ -281,7 +281,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
           <div>
             <label className="label-base flex items-center gap-1.5">
               <Lightbulb className="w-4 h-4 text-amber-400" />
-              רעיונות לטיפול הבא
+              תכנון טיפול הבא
             </label>
             <textarea
               value={form.next_ideas}
