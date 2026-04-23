@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Calendar, Activity, Clock, Stethoscope, Users2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { formatDateTime, formatDate } from "../lib/utils";
 import type { AppointmentWithPatient } from "../hooks/useAppointments";
-import type { Meeting } from "../types";
+import type { Appointment, Meeting } from "../types";
+import { AppointmentModal } from "../components/calendar/AppointmentModal";
+import { MeetingModal } from "../components/calendar/MeetingModal";
 
 // ── Daily schedule helpers ────────────────────────────────────────────────────
 type DayItem =
@@ -26,6 +28,10 @@ export function DashboardPage() {
   const [todayItems, setTodayItems] = useState<DayItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [todayLoading, setTodayLoading] = useState(true);
+
+  // Edit modals
+  const [editAppointment, setEditAppointment] = useState<Appointment | null>(null);
+  const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -58,43 +64,42 @@ export function DashboardPage() {
   }, []);
 
   // Today's schedule (appointments + meetings)
-  useEffect(() => {
-    const fetchToday = async () => {
-      const { start, end } = todayRange();
-      const [{ data: appts }, { data: meets }] = await Promise.all([
-        supabase
-          .from("appointments")
-          .select("*, patients(full_name)")
-          .in("status", ["scheduled", "completed"])
-          .gte("start_time", start)
-          .lte("start_time", end)
-          .order("start_time"),
-        supabase
-          .from("meetings")
-          .select("*")
-          .gte("start_time", start)
-          .lte("start_time", end)
-          .order("start_time"),
-      ]);
+  const fetchToday = useCallback(async () => {
+    const { start, end } = todayRange();
+    const [{ data: appts }, { data: meets }] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("*, patients(full_name)")
+        .in("status", ["scheduled", "completed"])
+        .gte("start_time", start)
+        .lte("start_time", end)
+        .order("start_time"),
+      supabase
+        .from("meetings")
+        .select("*")
+        .gte("start_time", start)
+        .lte("start_time", end)
+        .order("start_time"),
+    ]);
 
-      const items: DayItem[] = [
-        ...((appts ?? []) as AppointmentWithPatient[]).map((a) => ({
-          kind: "appointment" as const,
-          time: a.start_time,
-          data: a,
-        })),
-        ...((meets ?? []) as Meeting[]).map((m) => ({
-          kind: "meeting" as const,
-          time: m.start_time,
-          data: m,
-        })),
-      ];
-      items.sort((a, b) => a.time.localeCompare(b.time));
-      setTodayItems(items);
-      setTodayLoading(false);
-    };
-    fetchToday();
+    const items: DayItem[] = [
+      ...((appts ?? []) as AppointmentWithPatient[]).map((a) => ({
+        kind: "appointment" as const,
+        time: a.start_time,
+        data: a,
+      })),
+      ...((meets ?? []) as Meeting[]).map((m) => ({
+        kind: "meeting" as const,
+        time: m.start_time,
+        data: m,
+      })),
+    ];
+    items.sort((a, b) => a.time.localeCompare(b.time));
+    setTodayItems(items);
+    setTodayLoading(false);
   }, []);
+
+  useEffect(() => { fetchToday(); }, [fetchToday]);
 
   const todayLabel = formatDate(new Date().toISOString());
 
@@ -134,8 +139,8 @@ export function DashboardPage() {
               item.kind === "appointment" ? (
                 <div
                   key={`appt-${item.data.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => navigate(`/patients/${item.data.patient_id}`)}
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-sky-50 cursor-pointer transition-colors group"
+                  onClick={() => setEditAppointment(item.data)}
                 >
                   <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
                     <Stethoscope className="w-4 h-4 text-sky-600" />
@@ -150,14 +155,17 @@ export function DashboardPage() {
                       {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
-                  {item.data.status === "completed" && (
+                  {item.data.status === "completed" ? (
                     <span className="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 shrink-0">בוצע</span>
+                  ) : (
+                    <span className="text-xs text-gray-300 group-hover:text-sky-400 transition-colors shrink-0">עריכה</span>
                   )}
                 </div>
               ) : (
                 <div
                   key={`meet-${item.data.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl"
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-violet-50 cursor-pointer transition-colors group"
+                  onClick={() => setEditMeeting(item.data)}
                 >
                   <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
                     <Users2 className="w-4 h-4 text-violet-600" />
@@ -170,6 +178,7 @@ export function DashboardPage() {
                       {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
+                  <span className="text-xs text-gray-300 group-hover:text-violet-400 transition-colors shrink-0">עריכה</span>
                 </div>
               )
             )}
@@ -193,6 +202,27 @@ export function DashboardPage() {
           value={loading ? "—" : stats.treatments.toString()}
         />
       </div>
+
+      {/* Edit modals */}
+      {editAppointment && (
+        <AppointmentModal
+          appointment={editAppointment}
+          onClose={() => setEditAppointment(null)}
+          onSaved={() => { setEditAppointment(null); fetchToday(); }}
+          onCompleted={(patientId, prefill) => {
+            setEditAppointment(null);
+            fetchToday();
+            navigate(`/patients/${patientId}`, { state: { openNewTreatment: true, prefill } });
+          }}
+        />
+      )}
+      {editMeeting && (
+        <MeetingModal
+          meeting={editMeeting}
+          onClose={() => setEditMeeting(null)}
+          onSaved={() => { setEditMeeting(null); fetchToday(); }}
+        />
+      )}
 
       {/* Upcoming appointments */}
       <div className="card p-5">
