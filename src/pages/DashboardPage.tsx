@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Calendar, Activity, Clock, Stethoscope, Users2 } from "lucide-react";
+import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
 import { formatDateTime, formatDate } from "../lib/utils";
 import type { AppointmentWithPatient } from "../hooks/useAppointments";
@@ -23,6 +24,7 @@ function todayRange() {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const firstName = useAuthStore((s) => s.firstName);
   const [stats, setStats] = useState({ patients: 0, treatments: 0 });
   const [upcoming, setUpcoming] = useState<AppointmentWithPatient[]>([]);
   const [todayItems, setTodayItems] = useState<DayItem[]>([]);
@@ -105,7 +107,9 @@ export function DashboardPage() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-5 md:mb-6">שלום!</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-5 md:mb-6">
+        {firstName ? `שלום, ${firstName}!` : "שלום!"}
+      </h1>
 
       {/* Daily planning */}
       <div className="card p-5 mb-6">

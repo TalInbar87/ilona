@@ -424,14 +424,20 @@ export type Database = {
           id: string;
           is_superuser: boolean;
           created_at: string;
+          first_name: string | null;
+          last_name: string | null;
         };
         Insert: {
           id: string;
           is_superuser?: boolean;
           created_at?: string;
+          first_name?: string | null;
+          last_name?: string | null;
         };
         Update: {
           is_superuser?: boolean;
+          first_name?: string | null;
+          last_name?: string | null;
         };
         Relationships: [];
       };

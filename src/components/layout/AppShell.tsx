@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen, ShieldCheck } from "lucide-react";
+import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen, ShieldCheck, Pencil, Check } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import { supabase } from "../../lib/supabase";
 import { cn } from "../../lib/utils";
 
 const navItems = [
@@ -17,13 +18,38 @@ export function AppShell() {
   const user = useAuthStore((s) => s.user);
   const isSuperuser = useAuthStore((s) => s.isSuperuser);
   const superuserLoading = useAuthStore((s) => s.superuserLoading);
+  const firstName = useAuthStore((s) => s.firstName);
+  const lastName = useAuthStore((s) => s.lastName);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
   };
+
+  const startEditProfile = () => {
+    setProfileForm({ first_name: firstName ?? "", last_name: lastName ?? "" });
+    setEditingProfile(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    await supabase.from("profiles").update({
+      first_name: profileForm.first_name.trim() || null,
+      last_name: profileForm.last_name.trim() || null,
+    }).eq("id", user.id);
+    await refreshProfile();
+    setSavingProfile(false);
+    setEditingProfile(false);
+  };
+
+  const displayName = [firstName, lastName].filter(Boolean).join(" ") || null;
 
   const SidebarContent = () => (
     <>
@@ -84,11 +110,60 @@ export function AppShell() {
       </nav>
 
       {/* User + Sign out */}
-      <div className="p-3 border-t border-gray-100">
-        {user?.email && (
-          <p className="px-3 mb-1.5 text-xs text-gray-400 truncate" title={user.email}>
-            {user.email}
-          </p>
+      <div className="p-3 border-t border-gray-100 space-y-1">
+        {/* Profile edit inline */}
+        {editingProfile ? (
+          <div className="px-3 py-2 space-y-2">
+            <input
+              autoFocus
+              type="text"
+              value={profileForm.first_name}
+              onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })}
+              placeholder="שם פרטי"
+              className="input-base text-xs py-1.5"
+            />
+            <input
+              type="text"
+              value={profileForm.last_name}
+              onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })}
+              placeholder="שם משפחה"
+              className="input-base text-xs py-1.5"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveProfile}
+                disabled={savingProfile}
+                className="btn-primary text-xs py-1 px-2.5 flex items-center gap-1 disabled:opacity-60"
+              >
+                <Check className="w-3 h-3" />
+                {savingProfile ? "..." : "שמירה"}
+              </button>
+              <button
+                onClick={() => setEditingProfile(false)}
+                className="btn-secondary text-xs py-1 px-2.5"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 px-3 mb-1">
+            <div className="flex-1 min-w-0">
+              {displayName && (
+                <p className="text-xs font-medium text-gray-700 truncate">{displayName}</p>
+              )}
+              {user?.email && (
+                <p className="text-xs text-gray-400 truncate" title={user.email}>{user.email}</p>
+              )}
+            </div>
+            <button
+              onClick={startEditProfile}
+              className="p-1 hover:bg-gray-100 rounded text-gray-300 hover:text-gray-500 transition-colors shrink-0"
+              title="עריכת פרופיל"
+            >
+              <Pencil className="w-3 h-3" />
+            </button>
+          </div>
         )}
         <button
           onClick={handleSignOut}
