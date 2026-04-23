@@ -29,8 +29,12 @@ export function DashboardPage() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const now = new Date().toISOString();
-      const weekEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      // Start from tomorrow 00:00 so there's no overlap with "תכנון יומי"
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const now = tomorrow.toISOString();
+      const weekEnd = new Date(tomorrow.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
       const [{ count: pCount }, { count: tCount }, { data: appts }] =
         await Promise.all([
@@ -214,7 +218,7 @@ export function DashboardPage() {
         ) : upcoming.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <Clock className="w-8 h-8 mx-auto mb-2 text-gray-200" />
-            <p className="text-sm">אין תורים קרובים השבוע</p>
+            <p className="text-sm">אין תורים קרובים בשבעת הימים הבאים</p>
           </div>
         ) : (
           <div className="space-y-2">
