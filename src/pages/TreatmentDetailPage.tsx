@@ -10,6 +10,7 @@ import {
   CheckSquare,
   Square,
   Wrench,
+  Lightbulb,
 } from "lucide-react";
 import { useTreatment } from "../hooks/useTreatment";
 import { formatDate, formatDateTime } from "../lib/utils";
@@ -170,6 +171,19 @@ export function TreatmentDetailPage() {
           <p className="text-sm text-gray-400">אין תיעוד מפורט לטיפול זה</p>
         )}
       </div>
+
+      {/* Next session ideas */}
+      {treatment.next_ideas && (
+        <div className="card p-5 mb-4 border-r-4 border-amber-300">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+            <Lightbulb className="w-4 h-4 text-amber-400" />
+            רעיונות לטיפול הבא
+          </h3>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+            {treatment.next_ideas}
+          </p>
+        </div>
+      )}
 
       {/* Files */}
       <div className="card p-5">

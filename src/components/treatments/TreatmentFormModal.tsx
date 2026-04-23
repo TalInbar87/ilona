@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Upload, Paperclip, Trash2, CheckSquare, Square, Wrench } from "lucide-react";
+import { X, Upload, Paperclip, Trash2, CheckSquare, Square, Wrench, Lightbulb } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
 import { GoalPicker } from "../goals/GoalPicker";
@@ -57,6 +57,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
     duration_min: treatment?.duration_min?.toString() ?? prefill?.duration_min?.toString() ?? "",
     tools: treatment?.tools ?? "",
     notes: treatment?.notes ?? "",
+    next_ideas: treatment?.next_ideas ?? "",
   });
 
   const [goals, setGoals] = useState<GoalItem[]>(() => parseGoals(treatment?.summary));
@@ -140,6 +141,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       summary: serializeGoals(goals),
       tools: form.tools.trim() || null,
       notes: form.notes.trim() || null,
+      next_ideas: form.next_ideas.trim() || null,
     };
 
     let treatmentId = treatment?.id;
@@ -272,6 +274,21 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
               className="input-base resize-none"
               rows={5}
               placeholder="תיעוד מפורט של הטיפול, תצפיות, התקדמות..."
+            />
+          </div>
+
+          {/* Next session ideas */}
+          <div>
+            <label className="label-base flex items-center gap-1.5">
+              <Lightbulb className="w-4 h-4 text-amber-400" />
+              רעיונות לטיפול הבא
+            </label>
+            <textarea
+              value={form.next_ideas}
+              onChange={(e) => setForm({ ...form, next_ideas: e.target.value })}
+              className="input-base resize-none"
+              rows={3}
+              placeholder="מה לנסות בפגישה הבאה, נושאים להמשך..."
             />
           </div>
 

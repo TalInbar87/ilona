@@ -251,6 +251,7 @@ export type Database = {
           notes: string | null;
           summary: string | null;
           tools: string | null;
+          next_ideas: string | null;
           duration_min: number | null;
           created_at: string;
           updated_at: string;
@@ -264,6 +265,7 @@ export type Database = {
           notes?: string | null;
           summary?: string | null;
           tools?: string | null;
+          next_ideas?: string | null;
           duration_min?: number | null;
           created_at?: string;
           updated_at?: string;
@@ -277,6 +279,7 @@ export type Database = {
           notes?: string | null;
           summary?: string | null;
           tools?: string | null;
+          next_ideas?: string | null;
           duration_min?: number | null;
           updated_at?: string;
           created_by?: string | null;

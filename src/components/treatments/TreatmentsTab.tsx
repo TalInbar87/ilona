@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, ClipboardList, ChevronLeft } from "lucide-react";
+import { Plus, ClipboardList, ChevronLeft, Lightbulb } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTreatments } from "../../hooks/useTreatments";
 import { TreatmentFormModal, type TreatmentPrefill } from "./TreatmentFormModal";
@@ -44,6 +44,19 @@ export function TreatmentsTab({ patientId, onTreatmentCountChange, autoOpen = fa
           תיעוד טיפול חדש
         </button>
       </div>
+
+      {/* Ideas from last treatment */}
+      {treatments[0]?.next_ideas && (
+        <div className="flex gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+          <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-amber-700 mb-1">רעיונות מהטיפול האחרון</p>
+            <p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">
+              {treatments[0].next_ideas}
+            </p>
+          </div>
+        </div>
+      )}
 
       {treatments.length === 0 ? (
         <div className="text-center py-10 text-gray-400">

@@ -24,3 +24,7 @@ alter table meetings enable row level security;
 create policy "users_manage_own_meetings" on meetings
   using  (created_by = auth.uid())
   with check (created_by = auth.uid());
+
+-- 3. Add next_ideas column to treatments
+alter table treatments
+  add column if not exists next_ideas text;
