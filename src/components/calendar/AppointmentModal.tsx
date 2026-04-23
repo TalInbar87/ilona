@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { Appointment, AppointmentStatus } from "../../types";
 
@@ -18,13 +18,32 @@ interface Props {
   onCompleted?: (patientId: string, prefill: TreatmentPrefill) => void;
 }
 
+interface PatientOption {
+  id: string;
+  full_name: string;
+  email: string | null;
+}
+
 function toLocalDatetimeValue(date: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function buildMailtoHref(patient: PatientOption, startStr: string, endStr: string): string {
+  if (!patient.email || !startStr) return "";
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  const dateStr = start.toLocaleDateString("he-IL", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const timeStr = `${start.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}–${end.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}`;
+  const subject = encodeURIComponent(`זימון לפגישה – ${dateStr}`);
+  const body = encodeURIComponent(
+    `שלום ${patient.full_name},\n\nאני מזמינה אותך לפגישה:\nתאריך: ${dateStr}\nשעה: ${timeStr}\n\nבברכה`
+  );
+  return `mailto:${patient.email}?subject=${subject}&body=${body}`;
+}
+
 export function AppointmentModal({ initialStart, initialEnd, appointment, onClose, onSaved, onCompleted }: Props) {
-  const [patients, setPatients] = useState<{ id: string; full_name: string }[]>([]);
+  const [patients, setPatients] = useState<PatientOption[]>([]);
   const [form, setForm] = useState({
     patient_id: appointment?.patient_id ?? "",
     start_time: appointment?.start_time
@@ -42,10 +61,15 @@ export function AppointmentModal({ initialStart, initialEnd, appointment, onClos
   useEffect(() => {
     supabase
       .from("patients")
-      .select("id, full_name")
+      .select("id, full_name, email")
       .order("full_name")
-      .then(({ data }) => setPatients(data ?? []));
+      .then(({ data }) => setPatients((data ?? []) as PatientOption[]));
   }, []);
+
+  const selectedPatient = patients.find((p) => p.id === form.patient_id) ?? null;
+  const mailtoHref = selectedPatient?.email && form.start_time && form.end_time
+    ? buildMailtoHref(selectedPatient, form.start_time, form.end_time)
+    : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +93,6 @@ export function AppointmentModal({ initialStart, initialEnd, appointment, onClos
 
     if (err) { setError(err.message); setSaving(false); return; }
 
-    // When marking as completed, redirect to treatment documentation
     if (form.status === "completed" && onCompleted && form.patient_id) {
       const start = new Date(form.start_time);
       const end = new Date(form.end_time);
@@ -177,6 +200,19 @@ export function AppointmentModal({ initialStart, initialEnd, appointment, onClos
               placeholder="הערות לגבי התור..."
             />
           </div>
+
+          {/* Email invite — shown when patient has email and times are set */}
+          {mailtoHref && (
+            <a
+              href={mailtoHref}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-xl px-4 py-2.5 transition-colors w-full"
+            >
+              <Mail className="w-4 h-4 shrink-0" />
+              <span>שלח זימון למייל של {selectedPatient?.full_name}</span>
+            </a>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving} className="btn-primary flex-1 disabled:opacity-60">

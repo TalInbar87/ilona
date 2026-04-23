@@ -16,6 +16,7 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
     date_of_birth: patient?.date_of_birth ?? "",
     id_number: patient?.id_number ?? "",
     phone: patient?.phone ?? "",
+    email: patient?.email ?? "",
     parent_name: patient?.parent_name ?? "",
     notes: patient?.notes ?? "",
   });
@@ -45,6 +46,7 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
       date_of_birth: form.date_of_birth,
       id_number: form.id_number.trim(),
       phone: form.phone.trim() || null,
+      email: form.email.trim() || null,
       parent_name: form.parent_name.trim() || null,
       notes: form.notes.trim() || null,
     };
@@ -135,6 +137,18 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               className="input-base"
               placeholder="050-0000000"
+              dir="ltr"
+            />
+          </div>
+
+          <div>
+            <label className="label-base">כתובת מייל</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="input-base"
+              placeholder="example@email.com"
               dir="ltr"
             />
           </div>

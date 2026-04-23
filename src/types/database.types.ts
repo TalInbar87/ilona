@@ -16,6 +16,7 @@ export type Database = {
           date_of_birth: string;
           id_number: string;
           phone: string | null;
+          email: string | null;
           parent_name: string | null;
           notes: string | null;
           archived_at: string | null;
@@ -29,6 +30,7 @@ export type Database = {
           date_of_birth: string;
           id_number: string;
           phone?: string | null;
+          email?: string | null;
           parent_name?: string | null;
           notes?: string | null;
           archived_at?: string | null;
@@ -42,6 +44,7 @@ export type Database = {
           date_of_birth?: string;
           id_number?: string;
           phone?: string | null;
+          email?: string | null;
           parent_name?: string | null;
           notes?: string | null;
           archived_at?: string | null;
@@ -453,6 +456,7 @@ export type Database = {
           date_of_birth: string;
           id_number: string;
           phone: string | null;
+          email: string | null;
           parent_name: string | null;
           notes: string | null;
           archived_at: string | null;

@@ -4,6 +4,7 @@ import {
   ArrowRight,
   User,
   Phone,
+  Mail,
   Hash,
   Calendar,
   Pencil,
@@ -106,10 +107,26 @@ export function PatientDetailPage() {
                   {formatDate(patient.date_of_birth)} ({calcAgeLabel(patient.date_of_birth)})
                 </span>
                 {patient.phone && (
-                  <span className="flex items-center gap-1" dir="ltr">
+                  <a
+                    href={`tel:${patient.phone}`}
+                    className="flex items-center gap-1 hover:text-sky-600 transition-colors"
+                    dir="ltr"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Phone className="w-3.5 h-3.5" />
                     {patient.phone}
-                  </span>
+                  </a>
+                )}
+                {patient.email && (
+                  <a
+                    href={`mailto:${patient.email}`}
+                    className="flex items-center gap-1 hover:text-sky-600 transition-colors"
+                    dir="ltr"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    {patient.email}
+                  </a>
                 )}
                 {patient.parent_name && (
                   <span className="text-gray-400">הורה: {patient.parent_name}</span>
@@ -174,7 +191,8 @@ export function PatientDetailPage() {
               <Detail label="מספר ת.ז." value={patient.id_number} mono />
               <Detail label="תאריך לידה" value={formatDate(patient.date_of_birth)} />
               <Detail label="גיל" value={calcAgeLabel(patient.date_of_birth)} />
-              {patient.phone && <Detail label="טלפון" value={patient.phone} />}
+              {patient.phone && <Detail label="טלפון" value={patient.phone} href={`tel:${patient.phone}`} />}
+              {patient.email && <Detail label="מייל" value={patient.email} href={`mailto:${patient.email}`} />}
               {patient.parent_name && <Detail label="שם הורה" value={patient.parent_name} />}
               {patient.notes && <Detail label="הערות" value={patient.notes} />}
             </div>
@@ -204,12 +222,19 @@ export function PatientDetailPage() {
   );
 }
 
-function Detail({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Detail({ label, value, mono, href }: { label: string; value: string; mono?: boolean; href?: string }) {
+  const content = href ? (
+    <a href={href} className={`text-sm text-sky-600 hover:underline ${mono ? "font-mono" : ""}`} dir="ltr">
+      {value}
+    </a>
+  ) : (
+    <span className={`text-sm text-gray-900 ${mono ? "font-mono" : ""}`}>{value}</span>
+  );
   return (
     <div className="py-2 border-b border-gray-50 last:border-0 sm:flex sm:gap-3">
       <span className="block text-xs text-gray-400 mb-0.5 sm:hidden">{label}</span>
       <span className="hidden sm:block text-sm text-gray-500 w-32 shrink-0">{label}</span>
-      <span className={`text-sm text-gray-900 ${mono ? "font-mono" : ""}`}>{value}</span>
+      {content}
     </div>
   );
 }
