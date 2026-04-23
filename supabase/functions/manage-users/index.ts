@@ -92,6 +92,7 @@ Deno.serve(async (req) => {
         };
       }
 
+      const now = new Date();
       const users = authData.users.map((u) => ({
         id: u.id,
         email: u.email ?? "",
@@ -100,6 +101,7 @@ Deno.serve(async (req) => {
         is_superuser: profileMap[u.id]?.is_superuser ?? false,
         first_name: profileMap[u.id]?.first_name ?? null,
         last_name: profileMap[u.id]?.last_name ?? null,
+        is_banned: !!(u.banned_until && new Date(u.banned_until) > now),
       }));
 
       return json({ users });
@@ -159,14 +161,29 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
-    // DELETE USER
-    if (action === "delete") {
+    // BAN USER (soft delete — data preserved, login blocked)
+    if (action === "ban") {
       const { userId } = body as { userId?: string };
       if (!userId) return json({ error: "userId required" }, 400);
-      if (userId === caller.id) return json({ error: "אין אפשרות למחוק את המשתמש הנוכחי" }, 400);
+      if (userId === caller.id) return json({ error: "אין אפשרות לחסום את המשתמש הנוכחי" }, 400);
 
-      const { error: deleteErr } = await admin.auth.admin.deleteUser(userId);
-      if (deleteErr) throw deleteErr;
+      const { error: banErr } = await admin.auth.admin.updateUserById(userId, {
+        ban_duration: "876000h", // ~100 years
+      });
+      if (banErr) throw banErr;
+
+      return json({ ok: true });
+    }
+
+    // UNBAN USER
+    if (action === "unban") {
+      const { userId } = body as { userId?: string };
+      if (!userId) return json({ error: "userId required" }, 400);
+
+      const { error: unbanErr } = await admin.auth.admin.updateUserById(userId, {
+        ban_duration: "none",
+      });
+      if (unbanErr) throw unbanErr;
 
       return json({ ok: true });
     }

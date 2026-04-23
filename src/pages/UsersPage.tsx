@@ -10,7 +10,8 @@ import {
   X,
   Check,
   Loader2,
-  Trash2,
+  Ban,
+  CircleCheck,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authStore";
@@ -24,6 +25,7 @@ interface AppUser {
   is_superuser: boolean;
   first_name: string | null;
   last_name: string | null;
+  is_banned: boolean;
 }
 
 async function callManageUsers(body: object) {
@@ -61,8 +63,8 @@ export function UsersPage() {
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmBanId, setConfirmBanId] = useState<string | null>(null);
+  const [banningId, setBanningId] = useState<string | null>(null);
 
   // ── Fetch users ────────────────────────────────────────────────────────────
   const fetchUsers = useCallback(async () => {
@@ -119,17 +121,17 @@ export function UsersPage() {
     }
   };
 
-  // ── Delete user ────────────────────────────────────────────────────────────
-  const handleDelete = async (userId: string) => {
-    setDeletingId(userId);
+  // ── Ban / unban user ───────────────────────────────────────────────────────
+  const handleBanToggle = async (userId: string, currentlyBanned: boolean) => {
+    setBanningId(userId);
     try {
-      await callManageUsers({ action: "delete", userId });
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-      setConfirmDeleteId(null);
+      await callManageUsers({ action: currentlyBanned ? "unban" : "ban", userId });
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, is_banned: !currentlyBanned } : u));
+      setConfirmBanId(null);
     } catch (e) {
       alert(e instanceof Error ? e.message : String(e));
     } finally {
-      setDeletingId(null);
+      setBanningId(null);
     }
   };
 
@@ -212,28 +214,30 @@ export function UsersPage() {
               }`}
             >
               {/* Avatar */}
-              <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-700 font-bold text-sm">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-sm ${u.is_banned ? "bg-gray-100 text-gray-400" : "bg-indigo-100 text-indigo-700"}`}>
                 {u.first_name ? u.first_name[0].toUpperCase() : u.email[0].toUpperCase()}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-gray-900 truncate">
+                  <span className={`text-sm font-medium truncate ${u.is_banned ? "text-gray-400 line-through" : "text-gray-900"}`}>
                     {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
                   </span>
                   {(u.first_name || u.last_name) && (
                     <span className="text-xs text-gray-400 truncate">{u.email}</span>
                   )}
                   {u.id === currentUser?.id && (
-                    <span className="text-xs bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">
-                      אתה
-                    </span>
+                    <span className="text-xs bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">אתה</span>
                   )}
                   {u.is_superuser && (
                     <span className="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 flex items-center gap-0.5">
-                      <ShieldCheck className="w-3 h-3" />
-                      מנהל
+                      <ShieldCheck className="w-3 h-3" />מנהל
+                    </span>
+                  )}
+                  {u.is_banned && (
+                    <span className="text-xs bg-red-100 text-red-600 rounded-full px-2 py-0.5 flex items-center gap-0.5">
+                      <Ban className="w-3 h-3" />חסום
                     </span>
                   )}
                 </div>
@@ -272,14 +276,24 @@ export function UsersPage() {
                 {u.is_superuser ? "מנהל" : "משתמש רגיל"}
               </button>
 
-              {/* Delete — only for other users */}
+              {/* Ban / unban — only for other users */}
               {u.id !== currentUser?.id && (
                 <button
-                  onClick={() => setConfirmDeleteId(u.id)}
-                  title="מחק משתמש"
-                  className="shrink-0 p-1.5 hover:bg-red-50 rounded-lg text-gray-300 hover:text-red-400 transition-colors"
+                  onClick={() => u.is_banned ? handleBanToggle(u.id, true) : setConfirmBanId(u.id)}
+                  disabled={banningId === u.id}
+                  title={u.is_banned ? "שחרר חסימה" : "חסום משתמש"}
+                  className={`shrink-0 p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                    u.is_banned
+                      ? "text-emerald-500 hover:bg-emerald-50"
+                      : "text-gray-300 hover:bg-red-50 hover:text-red-400"
+                  }`}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  {banningId === u.id
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : u.is_banned
+                      ? <CircleCheck className="w-3.5 h-3.5" />
+                      : <Ban className="w-3.5 h-3.5" />
+                  }
                 </button>
               )}
             </li>
@@ -287,9 +301,9 @@ export function UsersPage() {
         </ul>
       )}
 
-      {/* Delete confirmation modal */}
-      {confirmDeleteId && (() => {
-        const target = users.find((u) => u.id === confirmDeleteId);
+      {/* Ban confirmation modal */}
+      {confirmBanId && (() => {
+        const target = users.find((u) => u.id === confirmBanId);
         if (!target) return null;
         const targetName = [target.first_name, target.last_name].filter(Boolean).join(" ") || target.email;
         return (
@@ -297,37 +311,34 @@ export function UsersPage() {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-                  <Trash2 className="w-5 h-5 text-red-600" />
+                  <Ban className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">מחיקת משתמש</h2>
+                  <h2 className="text-base font-bold text-gray-900">חסימת משתמש</h2>
                   <p className="text-sm text-gray-500">{targetName}</p>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 space-y-1.5">
-                <p className="text-sm font-medium text-amber-800">שים לב — הנתונים נשמרים:</p>
-                <ul className="text-xs text-amber-700 space-y-1 list-disc pr-4">
-                  <li>כל המטופלים, הטיפולים, האבחונים והתורים שנוצרו ע"י המשתמש <strong>יישארו במערכת</strong></li>
-                  <li>השדה "נוצר על ידי" יתאפס ל-ריק בכל הרשומות הרלוונטיות</li>
-                  <li>המשתמש לא יוכל להתחבר יותר</li>
+              <div className="bg-sky-50 border border-sky-200 rounded-xl p-3 mb-4 space-y-1">
+                <p className="text-sm font-medium text-sky-800">הנתונים נשמרים בשלמותם:</p>
+                <ul className="text-xs text-sky-700 space-y-1 list-disc pr-4">
+                  <li>המשתמש לא יוכל להתחבר</li>
+                  <li>כל המטופלים והנתונים שלו נשמרים ונגישים לו בעתיד</li>
+                  <li>ניתן לשחרר את החסימה בכל עת</li>
                 </ul>
               </div>
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => handleDelete(confirmDeleteId)}
-                  disabled={deletingId === confirmDeleteId}
+                  onClick={() => handleBanToggle(confirmBanId, false)}
+                  disabled={banningId === confirmBanId}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
                 >
-                  {deletingId === confirmDeleteId
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> מוחק...</>
-                    : <><Trash2 className="w-4 h-4" /> מחק משתמש</>}
+                  {banningId === confirmBanId
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> חוסם...</>
+                    : <><Ban className="w-4 h-4" /> חסום משתמש</>}
                 </button>
-                <button
-                  onClick={() => setConfirmDeleteId(null)}
-                  className="flex-1 btn-secondary"
-                >
+                <button onClick={() => setConfirmBanId(null)} className="flex-1 btn-secondary">
                   ביטול
                 </button>
               </div>
