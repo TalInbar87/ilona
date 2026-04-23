@@ -274,39 +274,67 @@ export function UsersPage() {
 
               {/* Delete — only for other users */}
               {u.id !== currentUser?.id && (
-                confirmDeleteId === u.id ? (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-xs text-red-500">למחוק?</span>
-                    <button
-                      onClick={() => handleDelete(u.id)}
-                      disabled={deletingId === u.id}
-                      className="p-1.5 hover:bg-red-50 rounded-lg text-red-400 disabled:opacity-50"
-                    >
-                      {deletingId === u.id
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : <Check className="w-3.5 h-3.5" />}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(null)}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setConfirmDeleteId(u.id)}
-                    title="מחק משתמש"
-                    className="shrink-0 p-1.5 hover:bg-red-50 rounded-lg text-gray-300 hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )
+                <button
+                  onClick={() => setConfirmDeleteId(u.id)}
+                  title="מחק משתמש"
+                  className="shrink-0 p-1.5 hover:bg-red-50 rounded-lg text-gray-300 hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               )}
             </li>
           ))}
         </ul>
       )}
+
+      {/* Delete confirmation modal */}
+      {confirmDeleteId && (() => {
+        const target = users.find((u) => u.id === confirmDeleteId);
+        if (!target) return null;
+        const targetName = [target.first_name, target.last_name].filter(Boolean).join(" ") || target.email;
+        return (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">מחיקת משתמש</h2>
+                  <p className="text-sm text-gray-500">{targetName}</p>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 space-y-1.5">
+                <p className="text-sm font-medium text-amber-800">שים לב — הנתונים נשמרים:</p>
+                <ul className="text-xs text-amber-700 space-y-1 list-disc pr-4">
+                  <li>כל המטופלים, הטיפולים, האבחונים והתורים שנוצרו ע"י המשתמש <strong>יישארו במערכת</strong></li>
+                  <li>השדה "נוצר על ידי" יתאפס ל-ריק בכל הרשומות הרלוונטיות</li>
+                  <li>המשתמש לא יוכל להתחבר יותר</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleDelete(confirmDeleteId)}
+                  disabled={deletingId === confirmDeleteId}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
+                >
+                  {deletingId === confirmDeleteId
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> מוחק...</>
+                    : <><Trash2 className="w-4 h-4" /> מחק משתמש</>}
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="flex-1 btn-secondary"
+                >
+                  ביטול
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Invite modal */}
       {inviteOpen && (
