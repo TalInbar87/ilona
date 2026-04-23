@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Plus, FileText, X, Upload, CheckSquare, Square, Trash2 } from "lucide-react";
+import { Plus, FileText, Upload, CheckSquare, Square, Trash2, Pencil, Check } from "lucide-react";
 import { useDiagnoses } from "../../hooks/useDiagnoses";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { formatDate } from "../../lib/utils";
 import { FileItem } from "../files/FileItem";
 import { GoalPicker } from "../goals/GoalPicker";
+import type { Diagnosis } from "../../types";
 
-// ── Goals helpers (same pattern as treatments) ──────────────────────
+// ── Goals helpers ────────────────────────────────────────────────────
 interface GoalItem { id: string; text: string; done: boolean; }
 
 function parseGoals(raw: string | null | undefined): GoalItem[] {
@@ -19,9 +20,7 @@ function serializeGoals(goals: GoalItem[]): string | null {
   return n.length ? JSON.stringify(n) : null;
 }
 
-interface Props {
-  patientId: string;
-}
+interface Props { patientId: string; }
 
 export function DiagnosesTab({ patientId }: Props) {
   const { data: diagnoses, loading, refetch } = useDiagnoses(patientId);
@@ -30,12 +29,9 @@ export function DiagnosesTab({ patientId }: Props) {
   const [formGoals, setFormGoals] = useState<GoalItem[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const addGoal = (text: string) =>
-    setFormGoals((p) => [...p, { id: crypto.randomUUID(), text, done: false }]);
-  const toggleGoal = (id: string) =>
-    setFormGoals((p) => p.map((g) => g.id === id ? { ...g, done: !g.done } : g));
-  const removeGoal = (id: string) =>
-    setFormGoals((p) => p.filter((g) => g.id !== id));
+  const addGoal    = (text: string) => setFormGoals((p) => [...p, { id: crypto.randomUUID(), text, done: false }]);
+  const toggleGoal = (id: string)   => setFormGoals((p) => p.map((g) => g.id === id ? { ...g, done: !g.done } : g));
+  const removeGoal = (id: string)   => setFormGoals((p) => p.filter((g) => g.id !== id));
 
   const handleAddDiagnosis = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +52,7 @@ export function DiagnosesTab({ patientId }: Props) {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("למחוק את האבחון?")) return;
     await supabase.from("diagnoses").delete().eq("id", id);
     refetch();
   };
@@ -77,71 +74,18 @@ export function DiagnosesTab({ patientId }: Props) {
 
       {/* Add form */}
       {showForm && (
-        <form onSubmit={handleAddDiagnosis} className="bg-sky-50 border border-sky-200 rounded-xl p-4 space-y-3">
-          <div>
-            <label className="label-base text-xs">שם האבחון *</label>
-            <input
-              autoFocus
-              type="text"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="input-base text-sm"
-              placeholder="לדוגמה: עיכוב שפתי, גמגום..."
-            />
-          </div>
-
-          {/* Goals checklist */}
-          <div>
-            <label className="label-base text-xs flex items-center gap-1">
-              <CheckSquare className="w-3.5 h-3.5 text-sky-500" />
-              מטרות לטיפול
-            </label>
-            {formGoals.length > 0 && (
-              <ul className="mb-2 space-y-1">
-                {formGoals.map((g) => (
-                  <li key={g.id} className="flex items-center gap-2 group">
-                    <button type="button" onClick={() => toggleGoal(g.id)} className="shrink-0 text-gray-400 hover:text-sky-600">
-                      {g.done ? <CheckSquare className="w-4 h-4 text-sky-500" /> : <Square className="w-4 h-4" />}
-                    </button>
-                    <span className={`text-sm flex-1 ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>{g.text}</span>
-                    <button type="button" onClick={() => removeGoal(g.id)} className="text-gray-300 hover:text-red-400">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <GoalPicker onAdd={addGoal} colorScheme="sky" />
-          </div>
-
-          <div>
-            <label className="label-base text-xs">תיאור</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input-base text-sm resize-none"
-              rows={2}
-              placeholder="פרטים נוספים..."
-            />
-          </div>
-          <div>
-            <label className="label-base text-xs">תאריך אבחון</label>
-            <input
-              type="date"
-              value={form.diagnosed_at}
-              onChange={(e) => setForm({ ...form, diagnosed_at: e.target.value })}
-              className="input-base text-sm"
-            />
-          </div>
-          <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="btn-primary text-xs py-1.5 px-3 disabled:opacity-60">
-              {saving ? "שומר..." : "הוספה"}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary text-xs py-1.5 px-3">
-              ביטול
-            </button>
-          </div>
-        </form>
+        <DiagnosisForm
+          onSubmit={handleAddDiagnosis}
+          form={form}
+          setForm={setForm}
+          goals={formGoals}
+          onAddGoal={addGoal}
+          onToggleGoal={toggleGoal}
+          onRemoveGoal={removeGoal}
+          saving={saving}
+          onCancel={() => setShowForm(false)}
+          submitLabel="הוספה"
+        />
       )}
 
       {/* List */}
@@ -167,8 +111,148 @@ export function DiagnosesTab({ patientId }: Props) {
   );
 }
 
-function DiagnosisCard({ diagnosis, patientId, onDelete, onRefetch }: any) {
+// ── Shared form ───────────────────────────────────────────────────────────────
+function DiagnosisForm({
+  onSubmit,
+  form,
+  setForm,
+  goals,
+  onAddGoal,
+  onToggleGoal,
+  onRemoveGoal,
+  saving,
+  onCancel,
+  submitLabel,
+  bgClass = "bg-sky-50 border border-sky-200",
+}: {
+  onSubmit: (e: React.FormEvent) => void;
+  form: { title: string; description: string; diagnosed_at: string };
+  setForm: (f: { title: string; description: string; diagnosed_at: string }) => void;
+  goals: GoalItem[];
+  onAddGoal: (text: string) => void;
+  onToggleGoal: (id: string) => void;
+  onRemoveGoal: (id: string) => void;
+  saving: boolean;
+  onCancel: () => void;
+  submitLabel: string;
+  bgClass?: string;
+}) {
+  return (
+    <form onSubmit={onSubmit} className={`${bgClass} rounded-xl p-4 space-y-3`}>
+      <div>
+        <label className="label-base text-xs">שם האבחון *</label>
+        <input
+          autoFocus
+          type="text"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          className="input-base text-sm"
+          placeholder="לדוגמה: עיכוב שפתי, גמגום..."
+          required
+        />
+      </div>
+
+      <div>
+        <label className="label-base text-xs flex items-center gap-1">
+          <CheckSquare className="w-3.5 h-3.5 text-sky-500" />
+          מטרות לטיפול
+        </label>
+        {goals.length > 0 && (
+          <ul className="mb-2 space-y-1">
+            {goals.map((g) => (
+              <li key={g.id} className="flex items-center gap-2">
+                <button type="button" onClick={() => onToggleGoal(g.id)} className="shrink-0 text-gray-400 hover:text-sky-600">
+                  {g.done ? <CheckSquare className="w-4 h-4 text-sky-500" /> : <Square className="w-4 h-4" />}
+                </button>
+                <span className={`text-sm flex-1 ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>{g.text}</span>
+                <button type="button" onClick={() => onRemoveGoal(g.id)} className="text-gray-300 hover:text-red-400">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <GoalPicker onAdd={onAddGoal} colorScheme="sky" />
+      </div>
+
+      <div>
+        <label className="label-base text-xs">תיאור</label>
+        <textarea
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          className="input-base text-sm resize-none"
+          rows={2}
+          placeholder="פרטים נוספים..."
+        />
+      </div>
+
+      <div>
+        <label className="label-base text-xs">תאריך אבחון</label>
+        <input
+          type="date"
+          value={form.diagnosed_at}
+          onChange={(e) => setForm({ ...form, diagnosed_at: e.target.value })}
+          className="input-base text-sm"
+        />
+      </div>
+
+      <div className="flex gap-2">
+        <button type="submit" disabled={saving} className="btn-primary text-xs py-1.5 px-3 disabled:opacity-60 flex items-center gap-1.5">
+          {saving ? "שומר..." : <><Check className="w-3.5 h-3.5" />{submitLabel}</>}
+        </button>
+        <button type="button" onClick={onCancel} className="btn-secondary text-xs py-1.5 px-3">
+          ביטול
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ── Card (view + inline edit) ─────────────────────────────────────────────────
+function DiagnosisCard({ diagnosis, patientId, onDelete, onRefetch }: {
+  diagnosis: Diagnosis & { files: any[] };
+  patientId: string;
+  onDelete: () => void;
+  onRefetch: () => void;
+}) {
   const goals = parseGoals(diagnosis.goals);
+
+  // ── Edit state ──────────────────────────────────────────────────────
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: diagnosis.title,
+    description: diagnosis.description ?? "",
+    diagnosed_at: diagnosis.diagnosed_at ?? "",
+  });
+  const [editGoals, setEditGoals] = useState<GoalItem[]>(() => parseGoals(diagnosis.goals));
+  const [saving, setSaving] = useState(false);
+
+  const startEdit = () => {
+    setEditForm({
+      title: diagnosis.title,
+      description: diagnosis.description ?? "",
+      diagnosed_at: diagnosis.diagnosed_at ?? "",
+    });
+    setEditGoals(parseGoals(diagnosis.goals));
+    setEditing(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editForm.title.trim()) return;
+    setSaving(true);
+    await supabase.from("diagnoses").update({
+      title: editForm.title.trim(),
+      description: editForm.description.trim() || null,
+      diagnosed_at: editForm.diagnosed_at || null,
+      goals: serializeGoals(editGoals),
+    }).eq("id", diagnosis.id);
+    setSaving(false);
+    setEditing(false);
+    onRefetch();
+  };
+
+  // ── File upload ─────────────────────────────────────────────────────
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -177,59 +261,80 @@ function DiagnosisCard({ diagnosis, patientId, onDelete, onRefetch }: any) {
     if (!file) return;
     setUploading(true);
     setUploadError(null);
-
     const ext = file.name.split(".").pop() ?? "bin";
     const mime = file.type || (ext === "pdf" ? "application/pdf" : "application/octet-stream");
     const storagePath = `${patientId}/${diagnosis.id}/${crypto.randomUUID()}.${ext}`;
-
     const { error: uploadErr } = await supabase.storage
       .from(STORAGE_BUCKETS.PATIENT_FILES)
       .upload(storagePath, file, { contentType: mime });
-
     if (uploadErr) {
       setUploadError(uploadErr.message);
     } else {
-      const { error: dbErr } = await supabase.from("patient_files").insert({
-        patient_id: patientId,
-        diagnosis_id: diagnosis.id,
-        file_name: file.name,
-        storage_path: storagePath,
-        mime_type: mime,
-        file_size: file.size,
+      await supabase.from("patient_files").insert({
+        patient_id: patientId, diagnosis_id: diagnosis.id,
+        file_name: file.name, storage_path: storagePath,
+        mime_type: mime, file_size: file.size,
       });
-      if (dbErr) setUploadError(dbErr.message);
-      else onRefetch();
+      onRefetch();
     }
-
     setUploading(false);
     e.target.value = "";
   };
 
+  // ── Edit mode ───────────────────────────────────────────────────────
+  if (editing) {
+    return (
+      <DiagnosisForm
+        onSubmit={handleSave}
+        form={editForm}
+        setForm={setEditForm}
+        goals={editGoals}
+        onAddGoal={(text) => setEditGoals((p) => [...p, { id: crypto.randomUUID(), text, done: false }])}
+        onToggleGoal={(id) => setEditGoals((p) => p.map((g) => g.id === id ? { ...g, done: !g.done } : g))}
+        onRemoveGoal={(id) => setEditGoals((p) => p.filter((g) => g.id !== id))}
+        saving={saving}
+        onCancel={() => setEditing(false)}
+        submitLabel="שמירה"
+        bgClass="bg-amber-50 border border-amber-200"
+      />
+    );
+  }
+
+  // ── View mode ───────────────────────────────────────────────────────
   return (
     <div className="border border-gray-100 rounded-xl p-4">
       <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h4 className="font-medium text-gray-900 text-sm">{diagnosis.title}</h4>
           {diagnosis.diagnosed_at && (
             <p className="text-xs text-gray-400 mt-0.5">{formatDate(diagnosis.diagnosed_at)}</p>
           )}
         </div>
-        <button
-          onClick={onDelete}
-          className="p-1 hover:bg-red-50 rounded-lg text-gray-300 hover:text-red-400 transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1 shrink-0 mr-2">
+          <button
+            onClick={startEdit}
+            className="p-1.5 hover:bg-amber-50 rounded-lg text-gray-300 hover:text-amber-500 transition-colors"
+            title="עריכה"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1.5 hover:bg-red-50 rounded-lg text-gray-300 hover:text-red-400 transition-colors"
+            title="מחיקה"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
-      {/* Goals checklist — above description */}
       {goals.length > 0 && (
         <div className="mb-3">
           <p className="text-xs font-semibold text-gray-500 mb-1.5 flex items-center gap-1">
             <CheckSquare className="w-3.5 h-3.5 text-sky-500" /> מטרות לטיפול
           </p>
           <ul className="space-y-1">
-            {goals.map((g: GoalItem) => (
+            {goals.map((g) => (
               <li key={g.id} className="flex items-center gap-2">
                 {g.done
                   ? <CheckSquare className="w-4 h-4 text-sky-500 shrink-0" />
@@ -241,13 +346,11 @@ function DiagnosisCard({ diagnosis, patientId, onDelete, onRefetch }: any) {
         </div>
       )}
 
-      {/* Description — below goals */}
       {diagnosis.description && (
-        <p className="text-sm text-gray-600 mb-3">{diagnosis.description}</p>
+        <p className="text-sm text-gray-600 mb-3 whitespace-pre-wrap">{diagnosis.description}</p>
       )}
 
-      {/* Files */}
-      {diagnosis.files.length > 0 && (
+      {diagnosis.files?.length > 0 && (
         <div className="mt-1 space-y-1">
           {diagnosis.files.map((f: any) => (
             <FileItem key={f.id} file={f} bucket="PATIENT_FILES" onDeleted={onRefetch} />
