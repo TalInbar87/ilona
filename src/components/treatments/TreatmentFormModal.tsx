@@ -101,9 +101,10 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       });
   }, [patientId, treatment]);
 
-  const importGoal = (g: GoalItem) =>
+  const togglePrevGoal = (g: GoalItem) =>
     setGoals((prev) => {
-      if (prev.some((c) => c.text.trim() === g.text.trim())) return prev;
+      const alreadyIn = prev.some((c) => c.text.trim() === g.text.trim());
+      if (alreadyIn) return prev.filter((c) => c.text.trim() !== g.text.trim());
       return [...prev, { id: crypto.randomUUID(), text: g.text, done: false }];
     });
 
@@ -299,11 +300,10 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
                       <button
                         key={g.id}
                         type="button"
-                        onClick={() => importGoal(g)}
-                        disabled={added}
+                        onClick={() => togglePrevGoal(g)}
                         className={`w-full text-right flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
                           added
-                            ? "text-gray-300 cursor-default"
+                            ? "text-sky-50 hover:bg-red-50"
                             : "text-gray-600 hover:bg-sky-50"
                         }`}
                       >
