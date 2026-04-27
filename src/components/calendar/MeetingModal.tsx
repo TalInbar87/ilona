@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useAuthStore } from "../../store/authStore";
 import type { Meeting } from "../../types";
 
 function toLocalDatetimeValue(date: Date) {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function MeetingModal({ initialStart, initialEnd, meeting, onClose, onSaved }: Props) {
+  const userId = useAuthStore((s) => s.user?.id);
   const [form, setForm] = useState({
     title: meeting?.title ?? "",
     start_time: meeting?.start_time
@@ -43,7 +45,7 @@ export function MeetingModal({ initialStart, initialEnd, meeting, onClose, onSav
     };
     const { error: err } = meeting
       ? await supabase.from("meetings").update(payload).eq("id", meeting.id)
-      : await supabase.from("meetings").insert(payload);
+      : await supabase.from("meetings").insert({ ...payload, created_by: userId });
     if (err) { setError(err.message); setSaving(false); return; }
     onSaved();
   };
