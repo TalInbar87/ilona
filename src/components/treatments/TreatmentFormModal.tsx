@@ -69,6 +69,44 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Goals from previous treatments (new treatment only) ──
+  const [prevGoals, setPrevGoals] = useState<GoalItem[]>([]);
+
+  useEffect(() => {
+    if (treatment) return;
+    supabase
+      .from("treatments")
+      .select("summary")
+      .eq("patient_id", patientId)
+      .order("session_date", { ascending: false })
+      .then(({ data }) => {
+        if (!data) return;
+        const seen = new Set<string>();
+        const all: GoalItem[] = [];
+        for (const t of data) {
+          for (const g of parseGoals(t.summary)) {
+            const key = g.text.trim();
+            if (key && !seen.has(key)) {
+              seen.add(key);
+              all.push(g);
+            }
+          }
+        }
+        // Completed first, active below
+        all.sort((a, b) => {
+          if (a.done === b.done) return 0;
+          return a.done ? -1 : 1;
+        });
+        setPrevGoals(all);
+      });
+  }, [patientId, treatment]);
+
+  const importGoal = (g: GoalItem) =>
+    setGoals((prev) => {
+      if (prev.some((c) => c.text.trim() === g.text.trim())) return prev;
+      return [...prev, { id: crypto.randomUUID(), text: g.text, done: false }];
+    });
+
   // Fetch existing files when editing
   useEffect(() => {
     if (!treatment?.id) return;
@@ -248,6 +286,42 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
             )}
 
             <GoalPicker onAdd={addGoal} colorScheme="sky" />
+
+            {prevGoals.length > 0 && (
+              <div className="mt-3 border border-gray-100 rounded-xl bg-gray-50 overflow-hidden">
+                <p className="text-xs font-medium text-gray-400 px-3 pt-2 pb-1">
+                  מטרות מטיפולים קודמים
+                </p>
+                <div className="max-h-52 overflow-y-auto pb-2">
+                  {prevGoals.map((g) => {
+                    const added = goals.some((c) => c.text.trim() === g.text.trim());
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => importGoal(g)}
+                        disabled={added}
+                        className={`w-full text-right flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
+                          added
+                            ? "text-gray-300 cursor-default"
+                            : "text-gray-600 hover:bg-sky-50"
+                        }`}
+                      >
+                        {added
+                          ? <CheckSquare className="w-3.5 h-3.5 shrink-0 text-sky-400" />
+                          : <Square className="w-3.5 h-3.5 shrink-0 text-gray-300" />}
+                        <span className={`flex-1 ${g.done && !added ? "text-gray-400" : ""}`}>
+                          {g.text}
+                        </span>
+                        {g.done && !added && (
+                          <span className="text-xs text-gray-400 whitespace-nowrap">✓ הושלמה</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Tools / Aids */}
