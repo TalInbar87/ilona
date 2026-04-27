@@ -80,17 +80,18 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       .then(({ data }) => {
         if (!data) return;
         const seen = new Set<string>();
-        const active: GoalItem[] = [];
+        const all: GoalItem[] = [];
         for (const t of data) {
           for (const g of parseGoals(t.summary)) {
             const key = g.text.trim();
-            if (key && !g.done && !seen.has(key)) {
+            if (key && !seen.has(key)) {
               seen.add(key);
-              active.push({ id: crypto.randomUUID(), text: g.text, done: false });
+              // Preserve status from most recent treatment (newest first)
+              all.push({ id: crypto.randomUUID(), text: g.text, done: g.done });
             }
           }
         }
-        setGoals(active);
+        setGoals(all);
       });
   }, [patientId, treatment]);
 
