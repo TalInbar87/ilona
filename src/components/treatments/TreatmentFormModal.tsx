@@ -69,9 +69,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Goals from previous treatments (new treatment only) ──
-  const [prevGoals, setPrevGoals] = useState<GoalItem[]>([]);
-
+  // ── Pre-load active goals from previous treatments (new treatment only) ──
   useEffect(() => {
     if (treatment) return;
     supabase
@@ -82,31 +80,19 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       .then(({ data }) => {
         if (!data) return;
         const seen = new Set<string>();
-        const all: GoalItem[] = [];
+        const active: GoalItem[] = [];
         for (const t of data) {
           for (const g of parseGoals(t.summary)) {
             const key = g.text.trim();
-            if (key && !seen.has(key)) {
+            if (key && !g.done && !seen.has(key)) {
               seen.add(key);
-              all.push(g);
+              active.push({ id: crypto.randomUUID(), text: g.text, done: false });
             }
           }
         }
-        // Completed first, active below
-        all.sort((a, b) => {
-          if (a.done === b.done) return 0;
-          return a.done ? -1 : 1;
-        });
-        setPrevGoals(all);
+        setGoals(active);
       });
   }, [patientId, treatment]);
-
-  const togglePrevGoal = (g: GoalItem) =>
-    setGoals((prev) => {
-      const alreadyIn = prev.some((c) => c.text.trim() === g.text.trim());
-      if (alreadyIn) return prev.filter((c) => c.text.trim() !== g.text.trim());
-      return [...prev, { id: crypto.randomUUID(), text: g.text, done: false }];
-    });
 
   // Fetch existing files when editing
   useEffect(() => {
@@ -258,22 +244,19 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
               מטרות טיפול
             </label>
 
-            {goals.length > 0 && (
+            {/* Active goals */}
+            {goals.filter(g => !g.done).length > 0 && (
               <ul className="mb-2 space-y-1">
-                {goals.map((g) => (
+                {goals.filter(g => !g.done).map((g) => (
                   <li key={g.id} className="flex items-center gap-2 group">
                     <button
                       type="button"
                       onClick={() => toggleGoal(g.id)}
                       className="shrink-0 text-gray-400 hover:text-sky-600 transition-colors"
                     >
-                      {g.done
-                        ? <CheckSquare className="w-4 h-4 text-sky-500" />
-                        : <Square className="w-4 h-4" />}
+                      <Square className="w-4 h-4" />
                     </button>
-                    <span className={`text-sm flex-1 ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>
-                      {g.text}
-                    </span>
+                    <span className="text-sm flex-1 text-gray-700">{g.text}</span>
                     <button
                       type="button"
                       onClick={() => removeGoal(g.id)}
@@ -288,34 +271,31 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
 
             <GoalPicker onAdd={addGoal} colorScheme="sky" />
 
-            {prevGoals.length > 0 && (
-              <div className="mt-3 border border-gray-100 rounded-xl bg-gray-50 overflow-hidden">
-                <p className="text-xs font-medium text-gray-400 px-3 pt-2 pb-1">
-                  מטרות מטיפולים קודמים
-                </p>
-                <div className="max-h-52 overflow-y-auto pb-2">
-                  {prevGoals.map((g) => {
-                    const added = goals.some((c) => c.text.trim() === g.text.trim());
-                    return (
+            {/* Completed goals */}
+            {goals.filter(g => g.done).length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-medium text-gray-400 mb-1.5">🏅 הושלמו</p>
+                <ul className="space-y-1">
+                  {goals.filter(g => g.done).map((g) => (
+                    <li key={g.id} className="flex items-center gap-2 group">
                       <button
-                        key={g.id}
                         type="button"
-                        onClick={() => togglePrevGoal(g)}
-                        className="w-full text-right flex items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-sky-50"
+                        onClick={() => toggleGoal(g.id)}
+                        className="shrink-0 text-sky-400 hover:text-gray-400 transition-colors"
                       >
-                        {added
-                          ? <CheckSquare className="w-3.5 h-3.5 shrink-0 text-sky-500" />
-                          : <Square className="w-3.5 h-3.5 shrink-0 text-gray-300" />}
-                        <span className={`flex-1 ${g.done && !added ? "text-gray-400" : "text-gray-700"}`}>
-                          {g.text}
-                        </span>
-                        {g.done && !added && (
-                          <span className="text-xs text-gray-400 whitespace-nowrap">✓ הושלמה</span>
-                        )}
+                        <CheckSquare className="w-4 h-4" />
                       </button>
-                    );
-                  })}
-                </div>
+                      <span className="text-sm flex-1 line-through text-gray-400">{g.text}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeGoal(g.id)}
+                        className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
