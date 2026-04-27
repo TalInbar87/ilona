@@ -301,16 +301,12 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
                         key={g.id}
                         type="button"
                         onClick={() => togglePrevGoal(g)}
-                        className={`w-full text-right flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
-                          added
-                            ? "text-sky-50 hover:bg-red-50"
-                            : "text-gray-600 hover:bg-sky-50"
-                        }`}
+                        className="w-full text-right flex items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-sky-50"
                       >
                         {added
-                          ? <CheckSquare className="w-3.5 h-3.5 shrink-0 text-sky-400" />
+                          ? <CheckSquare className="w-3.5 h-3.5 shrink-0 text-sky-500" />
                           : <Square className="w-3.5 h-3.5 shrink-0 text-gray-300" />}
-                        <span className={`flex-1 ${g.done && !added ? "text-gray-400" : ""}`}>
+                        <span className={`flex-1 ${g.done && !added ? "text-gray-400" : "text-gray-700"}`}>
                           {g.text}
                         </span>
                         {g.done && !added && (
