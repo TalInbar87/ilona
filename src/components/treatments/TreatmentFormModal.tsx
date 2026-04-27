@@ -5,27 +5,49 @@ import { FileItem } from "../files/FileItem";
 import { GoalPicker } from "../goals/GoalPicker";
 import type { Treatment, TreatmentFile } from "../../types";
 
-// ── Goals checklist helpers ───────────────────
-interface GoalItem {
+// ── Goal type ─────────────────────────────────
+// source="db"  → row already exists in patient_goals (id = real DB uuid)
+// source="new" → added in this session, not yet persisted
+type GoalSource = "db" | "new";
+
+interface LocalGoal {
   id: string;
   text: string;
   done: boolean;
+  source: GoalSource;
+  originalDone?: boolean; // for DB goals: snapshot for change detection
 }
 
-function parseGoals(raw: string | null | undefined): GoalItem[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {}
-  // Legacy plain text → single item
-  return [{ id: crypto.randomUUID(), text: raw, done: false }];
-}
+// Sync goals to patient_goals table
+async function syncGoals(
+  goals: LocalGoal[],
+  patientId: string,
+  deletedIds: Set<string>
+): Promise<void> {
+  const ops: Promise<unknown>[] = [];
 
-function serializeGoals(goals: GoalItem[]): string | null {
-  const nonEmpty = goals.filter((g) => g.text.trim());
-  if (nonEmpty.length === 0) return null;
-  return JSON.stringify(nonEmpty);
+  // Update done status for DB goals whose status changed
+  for (const g of goals.filter(g => g.source === "db" && g.done !== g.originalDone)) {
+    ops.push(supabase.from("patient_goals").update({ done: g.done }).eq("id", g.id));
+  }
+
+  // Insert new goals (upsert to handle duplicate text gracefully)
+  const toInsert = goals
+    .filter(g => g.source === "new" && g.text.trim())
+    .map(g => ({ patient_id: patientId, text: g.text.trim(), done: g.done }));
+  if (toInsert.length > 0) {
+    ops.push(
+      supabase.from("patient_goals")
+        .upsert(toInsert, { onConflict: "patient_id,text" })
+    );
+  }
+
+  // Delete removed DB goals
+  if (deletedIds.size > 0) {
+    ops.push(supabase.from("patient_goals").delete().in("id", [...deletedIds]));
+  }
+
+  await Promise.all(ops);
 }
 
 // ── Props ─────────────────────────────────────
@@ -60,7 +82,8 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
     next_ideas: treatment?.next_ideas ?? "",
   });
 
-  const [goals, setGoals] = useState<GoalItem[]>(() => parseGoals(treatment?.summary));
+  const [goals, setGoals] = useState<LocalGoal[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   const [existingFiles, setExistingFiles] = useState<TreatmentFile[]>([]);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
@@ -69,31 +92,27 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Pre-load active goals from previous treatments (new treatment only) ──
+  // ── Load goals from patient_goals table ──
   useEffect(() => {
-    if (treatment) return;
     supabase
-      .from("treatments")
-      .select("summary")
+      .from("patient_goals")
+      .select("*")
       .eq("patient_id", patientId)
-      .order("session_date", { ascending: false })
+      .order("sort_order")
+      .order("created_at")
       .then(({ data }) => {
         if (!data) return;
-        const seen = new Set<string>();
-        const all: GoalItem[] = [];
-        for (const t of data) {
-          for (const g of parseGoals(t.summary)) {
-            const key = g.text.trim();
-            if (key && !seen.has(key)) {
-              seen.add(key);
-              // Preserve status from most recent treatment (newest first)
-              all.push({ id: crypto.randomUUID(), text: g.text, done: g.done });
-            }
-          }
-        }
-        setGoals(all);
+        setGoals(
+          data.map(g => ({
+            id: g.id,
+            text: g.text,
+            done: g.done,
+            source: "db" as GoalSource,
+            originalDone: g.done,
+          }))
+        );
       });
-  }, [patientId, treatment]);
+  }, [patientId]);
 
   // Fetch existing files when editing
   useEffect(() => {
@@ -111,13 +130,23 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
 
   // ── Goals ──────────────────────────────────
   const addGoal = (text: string) =>
-    setGoals((prev) => [...prev, { id: crypto.randomUUID(), text, done: false }]);
+    setGoals((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), text, done: false, source: "new" as GoalSource },
+    ]);
 
   const toggleGoal = (id: string) =>
     setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, done: !g.done } : g)));
 
-  const removeGoal = (id: string) =>
-    setGoals((prev) => prev.filter((g) => g.id !== id));
+  const removeGoal = (id: string) => {
+    setGoals((prev) => {
+      const goal = prev.find(g => g.id === id);
+      if (goal?.source === "db") {
+        setDeletedIds(ds => new Set([...ds, id]));
+      }
+      return prev.filter(g => g.id !== id);
+    });
+  };
 
   // ── Files ──────────────────────────────────
   const handlePickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +193,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       session_date: form.session_date,
       session_time: form.session_time || null,
       duration_min: form.duration_min ? parseInt(form.duration_min) : null,
-      summary: serializeGoals(goals),
+      // summary no longer used — goals live in patient_goals
       tools: form.tools.trim() || null,
       notes: form.notes.trim() || null,
       next_ideas: form.next_ideas.trim() || null,
@@ -178,6 +207,9 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       const { data } = await supabase.from("treatments").insert(payload).select().single();
       treatmentId = data?.id;
     }
+
+    // Sync goals to patient_goals table
+    await syncGoals(goals, patientId, deletedIds);
 
     if (treatmentId && pendingFiles.length > 0) {
       await uploadPendingFiles(treatmentId);

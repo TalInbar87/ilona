@@ -19,9 +19,10 @@ import { PatientFormModal } from "../components/patients/PatientFormModal";
 import { DiagnosesTab } from "../components/diagnoses/DiagnosesTab";
 import { HearingTestsTab } from "../components/hearingTests/HearingTestsTab";
 import { TreatmentsTab } from "../components/treatments/TreatmentsTab";
+import { PatientGoalsTab } from "../components/goals/PatientGoalsTab";
 import type { TreatmentPrefill } from "../components/treatments/TreatmentFormModal";
 
-type Tab = "details" | "hearing" | "diagnoses" | "treatments";
+type Tab = "details" | "hearing" | "diagnoses" | "treatments" | "goals";
 
 export function PatientDetailPage() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -72,10 +73,11 @@ export function PatientDetailPage() {
   }
 
   const tabs = [
-    { id: "details" as Tab, label: "פרטים אישיים" },
-    { id: "hearing" as Tab, label: "בדיקות שמיעה" },
-    { id: "diagnoses" as Tab, label: "אבחונים" },
+    { id: "details" as Tab,    label: "פרטים אישיים" },
+    { id: "hearing" as Tab,    label: "בדיקות שמיעה" },
+    { id: "diagnoses" as Tab,  label: "אבחונים" },
     { id: "treatments" as Tab, label: "תיק טיפול" },
+    { id: "goals" as Tab,      label: "מטרות" },
   ];
 
   return (
@@ -212,6 +214,9 @@ export function PatientDetailPage() {
               autoOpen={autoOpenTreatment}
               prefill={treatmentPrefill}
             />
+          )}
+          {activeTab === "goals" && (
+            <PatientGoalsTab patientId={patient.id} />
           )}
         </div>
       </div>

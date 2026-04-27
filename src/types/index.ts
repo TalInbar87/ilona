@@ -51,3 +51,7 @@ export type SupervisionSessionInsert = Database["public"]["Tables"]["supervision
 export type SupervisionSessionUpdate = Database["public"]["Tables"]["supervision_sessions"]["Update"];
 
 export type SupervisionFile = Database["public"]["Tables"]["supervision_files"]["Row"];
+
+export type PatientGoal = Database["public"]["Tables"]["patient_goals"]["Row"];
+export type PatientGoalInsert = Database["public"]["Tables"]["patient_goals"]["Insert"];
+export type PatientGoalUpdate = Database["public"]["Tables"]["patient_goals"]["Update"];

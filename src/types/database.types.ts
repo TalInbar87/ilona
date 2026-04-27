@@ -53,6 +53,40 @@ export type Database = {
         };
         Relationships: [];
       };
+      patient_goals: {
+        Row: {
+          id: string;
+          patient_id: string;
+          text: string;
+          done: boolean;
+          sort_order: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          text: string;
+          done?: boolean;
+          sort_order?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          text?: string;
+          done?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "patient_goals_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       hearing_tests: {
         Row: {
           id: string;
