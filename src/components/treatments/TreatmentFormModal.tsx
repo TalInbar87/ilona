@@ -24,11 +24,9 @@ async function syncGoals(
   patientId: string,
   deletedIds: Set<string>
 ): Promise<void> {
-  const ops: Promise<unknown>[] = [];
-
   // Update done status for DB goals whose status changed
   for (const g of goals.filter(g => g.source === "db" && g.done !== g.originalDone)) {
-    ops.push(supabase.from("patient_goals").update({ done: g.done }).eq("id", g.id));
+    await supabase.from("patient_goals").update({ done: g.done }).eq("id", g.id);
   }
 
   // Insert new goals (upsert to handle duplicate text gracefully)
@@ -36,18 +34,13 @@ async function syncGoals(
     .filter(g => g.source === "new" && g.text.trim())
     .map(g => ({ patient_id: patientId, text: g.text.trim(), done: g.done }));
   if (toInsert.length > 0) {
-    ops.push(
-      supabase.from("patient_goals")
-        .upsert(toInsert, { onConflict: "patient_id,text" })
-    );
+    await supabase.from("patient_goals").upsert(toInsert, { onConflict: "patient_id,text" });
   }
 
   // Delete removed DB goals
   if (deletedIds.size > 0) {
-    ops.push(supabase.from("patient_goals").delete().in("id", [...deletedIds]));
+    await supabase.from("patient_goals").delete().in("id", [...deletedIds]);
   }
-
-  await Promise.all(ops);
 }
 
 // ── Props ─────────────────────────────────────
