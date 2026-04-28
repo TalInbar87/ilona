@@ -68,7 +68,20 @@ export function TreatmentsPrintModal({ patientId, patientName, onClose }: Props)
           body * { visibility: hidden; }
           .treatments-print-root,
           .treatments-print-root * { visibility: visible; }
-          .treatments-print-root { position: absolute; top: 0; right: 0; width: 100%; padding: 0; }
+          /* Remove fixed/overflow so ALL content paginates, not just the viewport */
+          .treatments-print-root {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          .treatments-print-inner {
+            overflow: visible !important;
+            height: auto !important;
+            min-height: 0 !important;
+          }
           .no-print { display: none !important; }
           .treatment-block { page-break-inside: avoid; }
         }
@@ -79,7 +92,7 @@ export function TreatmentsPrintModal({ patientId, patientName, onClose }: Props)
 
       {/* Container */}
       <div className="treatments-print-root fixed inset-0 z-50 overflow-y-auto">
-        <div className="flex flex-col items-center min-h-full p-4 py-6">
+        <div className="treatments-print-inner flex flex-col items-center min-h-full p-4 py-6">
 
           {/* Toolbar — hidden in print */}
           <div className="no-print sticky top-2 z-10 flex items-center justify-between bg-white rounded-xl shadow-lg border border-gray-100 px-4 py-2.5 w-full max-w-2xl mb-5">
