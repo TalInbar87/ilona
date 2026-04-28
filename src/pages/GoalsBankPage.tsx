@@ -237,6 +237,33 @@ export function GoalsBankPage() {
     return matchText && matchCat;
   });
 
+  // ── Bulk selection ──────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkCategoryId, setBulkCategoryId] = useState<string>("");
+  const [bulkSaving, setBulkSaving] = useState(false);
+
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkAssign = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkSaving(true);
+    await supabase
+      .from("treatment_goals_bank")
+      .update({ category_id: bulkCategoryId || null })
+      .in("id", [...selectedIds]);
+    await refetch();
+    clearSelection();
+    setBulkCategoryId("");
+    setBulkSaving(false);
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-2xl">
       {/* Header */}
@@ -349,6 +376,40 @@ export function GoalsBankPage() {
         </div>
       )}
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && categories.length > 0 && (
+        <div className="sticky top-2 z-10 mb-3 flex items-center gap-2 p-3 bg-sky-50 border border-sky-200 rounded-xl shadow-sm">
+          <span className="text-sm font-medium text-sky-800 shrink-0">
+            {selectedIds.size} נבחרו
+          </span>
+          <select
+            value={bulkCategoryId}
+            onChange={(e) => setBulkCategoryId(e.target.value)}
+            className="input-base text-sm py-1.5 flex-1"
+          >
+            <option value="">ללא קטגוריה</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleBulkAssign}
+            disabled={bulkSaving}
+            className="btn-primary py-1.5 px-3 text-sm shrink-0 disabled:opacity-50"
+          >
+            {bulkSaving ? "..." : "שייך"}
+          </button>
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="p-1.5 hover:bg-sky-100 rounded-lg text-sky-500 shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* List */}
       {loading ? (
         <div className="space-y-2">
@@ -367,13 +428,23 @@ export function GoalsBankPage() {
         <ul className="space-y-2">
           {filtered.map((g) => {
             const cat = categories.find((c) => c.id === g.category_id);
+            const isSelected = selectedIds.has(g.id);
             return (
               <li
                 key={g.id}
-                className="card p-3 flex items-center gap-3 group transition-shadow hover:shadow-md"
+                className={`card p-3 flex items-center gap-3 group transition-shadow hover:shadow-md ${isSelected ? "ring-2 ring-sky-300 bg-sky-50/40" : ""}`}
               >
+                {/* Checkbox */}
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleSelect(g.id)}
+                  className="shrink-0 w-4 h-4 accent-sky-600 cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                />
+
                 {/* Use count */}
-                <span className="shrink-0 flex items-center gap-0.5 text-xs text-gray-400 min-w-[2.5rem]">
+                <span className="shrink-0 flex items-center gap-0.5 text-xs text-gray-400 min-w-[2rem]">
                   <Hash className="w-3 h-3" />
                   {g.use_count}
                 </span>

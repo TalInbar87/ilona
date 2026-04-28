@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, GraduationCap, Phone, Mail, Plus, Pencil, ClipboardList, ChevronLeft, CheckSquare, Square, Upload } from "lucide-react";
+import { ArrowRight, GraduationCap, Phone, Mail, Plus, Pencil, ClipboardList, ChevronLeft, Upload } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../lib/supabase";
 import { useSupervisees } from "../hooks/useSupervisees";
 import { useSupervisionSessions, useSupervisionSession } from "../hooks/useSupervisionSessions";
@@ -9,14 +9,6 @@ import { SupervisionSessionModal } from "../components/supervisees/SupervisionSe
 import { FileItem } from "../components/files/FileItem";
 import { formatDate } from "../lib/utils";
 import type { SupervisionSession } from "../types";
-
-// ── Goal display ──────────────────────────────
-interface GoalItem { id: string; text: string; done: boolean; }
-function parseGoals(raw: string | null | undefined): GoalItem[] {
-  if (!raw) return [];
-  try { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } catch {}
-  return [{ id: "0", text: raw, done: false }];
-}
 
 export function SuperviseeDetailPage() {
   const { superviseeId } = useParams<{ superviseeId: string }>();
@@ -135,7 +127,6 @@ function SessionRow({ session, expanded, superviseeId, onToggle, onEdit }: {
   onRefetch: () => void;
 }) {
   const { files, refetch: refetchFiles } = useSupervisionSession(expanded ? session.id : undefined);
-  const goals = parseGoals(session.goals);
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +158,6 @@ function SessionRow({ session, expanded, superviseeId, onToggle, onEdit }: {
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-400">
           {session.duration_min && <span>{session.duration_min} דק׳</span>}
-          {goals.length > 0 && <span className="bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded">{goals.length} מטרות</span>}
           <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="text-gray-400 hover:text-gray-600 p-1">
             <Pencil className="w-3.5 h-3.5" />
           </button>
@@ -178,21 +168,6 @@ function SessionRow({ session, expanded, superviseeId, onToggle, onEdit }: {
       {/* Expanded content */}
       {expanded && (
         <div className="border-t border-gray-100 p-4 space-y-4 bg-gray-50">
-          {goals.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
-                <CheckSquare className="w-3.5 h-3.5 text-violet-500" /> מטרות הדרכה
-              </p>
-              <ul className="space-y-1.5">
-                {goals.map((g) => (
-                  <li key={g.id} className="flex items-center gap-2">
-                    {g.done ? <CheckSquare className="w-4 h-4 text-violet-500 shrink-0" /> : <Square className="w-4 h-4 text-gray-300 shrink-0" />}
-                    <span className={`text-sm ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>{g.text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
           {session.summary && (
             <div>
               <p className="text-xs font-semibold text-gray-500 mb-1">סיכום</p>

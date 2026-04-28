@@ -1,22 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Upload, Paperclip, Trash2, CheckSquare, Square } from "lucide-react";
+import { X, Upload, Paperclip } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
-import { GoalPicker } from "../goals/GoalPicker";
 import type { SupervisionSession, SupervisionFile } from "../../types";
-
-// ── Goals checklist (same pattern as treatments) ──
-interface GoalItem { id: string; text: string; done: boolean; }
-
-function parseGoals(raw: string | null | undefined): GoalItem[] {
-  if (!raw) return [];
-  try { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } catch {}
-  return [{ id: crypto.randomUUID(), text: raw, done: false }];
-}
-function serializeGoals(goals: GoalItem[]): string | null {
-  const n = goals.filter((g) => g.text.trim());
-  return n.length ? JSON.stringify(n) : null;
-}
 
 interface Props {
   superviseeId: string;
@@ -35,7 +21,6 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
     duration_min: session?.duration_min?.toString() ?? "",
     summary: session?.summary ?? "",
   });
-  const [goals, setGoals] = useState<GoalItem[]>(() => parseGoals(session?.goals));
   const [existingFiles, setExistingFiles] = useState<SupervisionFile[]>([]);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
@@ -47,11 +32,6 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
     supabase.from("supervision_files").select("*").eq("session_id", session.id).order("uploaded_at")
       .then(({ data }) => setExistingFiles(data ?? []));
   }, [session?.id]);
-
-  const addGoal = (text: string) =>
-    setGoals((p) => [...p, { id: crypto.randomUUID(), text, done: false }]);
-  const toggleGoal = (id: string) => setGoals((p) => p.map((g) => g.id === id ? { ...g, done: !g.done } : g));
-  const removeGoal = (id: string) => setGoals((p) => p.filter((g) => g.id !== id));
 
   const handlePickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,7 +64,6 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
       session_date: form.session_date,
       session_time: form.session_time || null,
       duration_min: form.duration_min ? parseInt(form.duration_min) : null,
-      goals: serializeGoals(goals),
       summary: form.summary.trim() || null,
     };
     let sessionId = session?.id;
@@ -121,28 +100,6 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
           <div>
             <label className="label-base">משך ההדרכה (דקות)</label>
             <input type="number" value={form.duration_min} onChange={(e) => setForm({ ...form, duration_min: e.target.value })} className="input-base" placeholder="60" min="1" max="480" />
-          </div>
-
-          {/* Goals checklist */}
-          <div>
-            <label className="label-base flex items-center gap-1.5">
-              <CheckSquare className="w-4 h-4 text-violet-500" />
-              מטרות הדרכה
-            </label>
-            {goals.length > 0 && (
-              <ul className="mb-2 space-y-1">
-                {goals.map((g) => (
-                  <li key={g.id} className="flex items-center gap-2 group">
-                    <button type="button" onClick={() => toggleGoal(g.id)} className="shrink-0 text-gray-400 hover:text-violet-600">
-                      {g.done ? <CheckSquare className="w-4 h-4 text-violet-500" /> : <Square className="w-4 h-4" />}
-                    </button>
-                    <span className={`text-sm flex-1 ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>{g.text}</span>
-                    <button type="button" onClick={() => removeGoal(g.id)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <GoalPicker onAdd={addGoal} colorScheme="violet" />
           </div>
 
           {/* Summary */}
