@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -13,7 +13,6 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useTreatment } from "../hooks/useTreatment";
-import { usePatientGoals } from "../hooks/usePatientGoals";
 import { formatDate, formatDateTime } from "../lib/utils";
 import { FileItem } from "../components/files/FileItem";
 import { TreatmentFormModal } from "../components/treatments/TreatmentFormModal";
@@ -23,9 +22,25 @@ export function TreatmentDetailPage() {
   const { patientId, treatmentId } = useParams<{ patientId: string; treatmentId: string }>();
   const navigate = useNavigate();
   const { treatment, files, loading, refetch } = useTreatment(treatmentId);
-  const { data: goals } = usePatientGoals(patientId);
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Load goals from treatment_goals snapshot (not all patient goals)
+  const [goals, setGoals] = useState<{ id: string; text: string; done: boolean }[]>([]);
+  useEffect(() => {
+    if (!treatmentId) return;
+    supabase
+      .from("treatment_goals")
+      .select("patient_goals!goal_id(id, text, done)")
+      .eq("treatment_id", treatmentId)
+      .then(({ data }) => {
+        setGoals(
+          (data ?? [])
+            .map(r => r.patient_goals as { id: string; text: string; done: boolean } | null)
+            .filter((g): g is { id: string; text: string; done: boolean } => g !== null)
+        );
+      });
+  }, [treatmentId]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
