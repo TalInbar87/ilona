@@ -210,6 +210,7 @@ export function PatientDetailPage() {
           {activeTab === "treatments" && (
             <TreatmentsTab
               patientId={patient.id}
+              patientName={patient.full_name}
               onTreatmentCountChange={refetch}
               autoOpen={autoOpenTreatment}
               prefill={treatmentPrefill}

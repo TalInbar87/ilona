@@ -1,23 +1,26 @@
 import { useState } from "react";
-import { Plus, ClipboardList, ChevronLeft, Lightbulb } from "lucide-react";
+import { Plus, ClipboardList, ChevronLeft, Lightbulb, FileDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTreatments } from "../../hooks/useTreatments";
 import { TreatmentFormModal, type TreatmentPrefill } from "./TreatmentFormModal";
+import { TreatmentsPrintModal } from "./TreatmentsPrintModal";
 import { formatDate } from "../../lib/utils";
 import type { Treatment } from "../../types";
 
 interface Props {
   patientId: string;
+  patientName: string;
   onTreatmentCountChange: () => void;
   autoOpen?: boolean;
   prefill?: TreatmentPrefill;
 }
 
-export function TreatmentsTab({ patientId, onTreatmentCountChange, autoOpen = false, prefill }: Props) {
+export function TreatmentsTab({ patientId, patientName, onTreatmentCountChange, autoOpen = false, prefill }: Props) {
   const navigate = useNavigate();
   const { data: treatments, loading, refetch } = useTreatments(patientId);
   const [showForm, setShowForm] = useState(autoOpen);
   const [editTreatment, setEditTreatment] = useState<Treatment | null>(null);
+  const [showPrint, setShowPrint] = useState(false);
 
   const handleSaved = () => {
     setShowForm(false);
@@ -36,13 +39,24 @@ export function TreatmentsTab({ patientId, onTreatmentCountChange, autoOpen = fa
         <h3 className="text-sm font-semibold text-gray-700">
           תיק טיפול ({treatments.length} פגישות)
         </h3>
-        <button
-          onClick={() => setShowForm(true)}
-          className="btn-primary flex items-center gap-1.5 py-1.5 px-3 text-xs"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          תיעוד טיפול חדש
-        </button>
+        <div className="flex items-center gap-2">
+          {treatments.length > 0 && (
+            <button
+              onClick={() => setShowPrint(true)}
+              className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-xs"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              ייצא טיפולים
+            </button>
+          )}
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-primary flex items-center gap-1.5 py-1.5 px-3 text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            תיעוד טיפול חדש
+          </button>
+        </div>
       </div>
 
       {/* Ideas from last treatment */}
@@ -83,6 +97,14 @@ export function TreatmentsTab({ patientId, onTreatmentCountChange, autoOpen = fa
           prefill={editTreatment ? undefined : prefill}
           onClose={() => { setShowForm(false); setEditTreatment(null); }}
           onSaved={handleSaved}
+        />
+      )}
+
+      {showPrint && (
+        <TreatmentsPrintModal
+          patientId={patientId}
+          patientName={patientName}
+          onClose={() => setShowPrint(false)}
         />
       )}
     </div>
