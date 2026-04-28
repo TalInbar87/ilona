@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Activity, Clock, Stethoscope, Users2 } from "lucide-react";
+import { Users, Activity, Clock, Stethoscope, Users2, GraduationCap } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
 import { formatDate } from "../lib/utils";
@@ -26,7 +26,7 @@ function todayRange() {
 export function DashboardPage() {
   const navigate = useNavigate();
   const firstName = useAuthStore((s) => s.firstName);
-  const [stats, setStats] = useState({ patients: 0, monthlyTreatments: 0 });
+  const [stats, setStats] = useState({ patients: 0, monthlyTreatments: 0, monthlySupervisionsCount: 0 });
   const [todayItems, setTodayItems] = useState<DayItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [todayLoading, setTodayLoading] = useState(true);
@@ -43,16 +43,25 @@ export function DashboardPage() {
       .toISOString().split("T")[0];
 
     const fetchAll = async () => {
-      const [{ count: pCount }, { count: tMonthCount }] = await Promise.all([
+      const [{ count: pCount }, { count: tMonthCount }, { count: sMonthCount }] = await Promise.all([
         supabase.from("patients").select("*", { count: "exact", head: true }),
         supabase
           .from("treatments")
           .select("*", { count: "exact", head: true })
           .gte("session_date", monthStart)
           .lte("session_date", monthEnd),
+        supabase
+          .from("supervision_sessions")
+          .select("*", { count: "exact", head: true })
+          .gte("session_date", monthStart)
+          .lte("session_date", monthEnd),
       ]);
 
-      setStats({ patients: pCount ?? 0, monthlyTreatments: tMonthCount ?? 0 });
+      setStats({
+        patients: pCount ?? 0,
+        monthlyTreatments: tMonthCount ?? 0,
+        monthlySupervisionsCount: sMonthCount ?? 0,
+      });
       setLoading(false);
     };
     fetchAll();
@@ -106,7 +115,7 @@ export function DashboardPage() {
       </h1>
 
       {/* Stats — top */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className={`grid gap-4 mb-6 ${!loading && stats.monthlySupervisionsCount > 0 ? "grid-cols-3" : "grid-cols-2"}`}>
         <StatCard
           icon={<Users className="w-6 h-6 text-sky-600" />}
           bg="bg-sky-50"
@@ -120,6 +129,15 @@ export function DashboardPage() {
           label={`טיפולים — ${monthName}`}
           value={loading ? "—" : stats.monthlyTreatments.toString()}
         />
+        {!loading && stats.monthlySupervisionsCount > 0 && (
+          <StatCard
+            icon={<GraduationCap className="w-6 h-6 text-violet-600" />}
+            bg="bg-violet-50"
+            label={`הדרכות — ${monthName}`}
+            value={stats.monthlySupervisionsCount.toString()}
+            onClick={() => navigate("/supervisees")}
+          />
+        )}
       </div>
 
       {/* Daily planning */}
