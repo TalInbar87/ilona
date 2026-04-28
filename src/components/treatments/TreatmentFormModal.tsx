@@ -19,11 +19,12 @@ interface LocalGoal {
   categoryId?: string | null;
 }
 
-// Sync goals to patient_goals table
+// Sync goals to patient_goals table.
+// Removing a goal from the treatment view never deletes it from the patient —
+// only done-status changes and new goals are persisted.
 async function syncGoals(
   goals: LocalGoal[],
   patientId: string,
-  deletedIds: Set<string>
 ): Promise<void> {
   // Update done status for DB goals whose status changed
   for (const g of goals.filter(g => g.source === "db" && g.done !== g.originalDone)) {
@@ -36,11 +37,6 @@ async function syncGoals(
     .map(g => ({ patient_id: patientId, text: g.text.trim(), done: g.done, category_id: g.categoryId ?? null }));
   if (toInsert.length > 0) {
     await supabase.from("patient_goals").upsert(toInsert, { onConflict: "patient_id,text" });
-  }
-
-  // Delete removed DB goals
-  if (deletedIds.size > 0) {
-    await supabase.from("patient_goals").delete().in("id", [...deletedIds]);
   }
 }
 
@@ -77,7 +73,6 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   });
 
   const [goals, setGoals] = useState<LocalGoal[]>([]);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   const [existingFiles, setExistingFiles] = useState<TreatmentFile[]>([]);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
@@ -132,15 +127,9 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   const toggleGoal = (id: string) =>
     setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, done: !g.done } : g)));
 
-  const removeGoal = (id: string) => {
-    setGoals((prev) => {
-      const goal = prev.find(g => g.id === id);
-      if (goal?.source === "db") {
-        setDeletedIds(ds => new Set([...ds, id]));
-      }
-      return prev.filter(g => g.id !== id);
-    });
-  };
+  // Removes goal from this treatment's view only — does NOT delete from patient_goals
+  const removeGoal = (id: string) =>
+    setGoals((prev) => prev.filter(g => g.id !== id));
 
   // ── Files ──────────────────────────────────
   const handlePickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,8 +191,8 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       treatmentId = data?.id;
     }
 
-    // Sync goals to patient_goals table
-    await syncGoals(goals, patientId, deletedIds);
+    // Sync goals to patient_goals table (done-status changes + new goals only)
+    await syncGoals(goals, patientId);
 
     if (treatmentId && pendingFiles.length > 0) {
       await uploadPendingFiles(treatmentId);
