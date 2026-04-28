@@ -5,6 +5,7 @@ export interface BankGoal {
   id: string;
   text: string;
   use_count: number;
+  category_id: string | null;
 }
 
 export function useGoalsBank() {
@@ -14,7 +15,7 @@ export function useGoalsBank() {
   const refetch = async () => {
     const { data: rows } = await supabase
       .from("treatment_goals_bank")
-      .select("id, text, use_count")
+      .select("id, text, use_count, category_id")
       .order("use_count", { ascending: false })
       .order("created_at");
     setData(rows ?? []);
@@ -52,7 +53,7 @@ export function useGoalsBank() {
       const { data: inserted } = await supabase
         .from("treatment_goals_bank")
         .insert({ text: trimmed })
-        .select("id, text, use_count")
+        .select("id, text, use_count, category_id")
         .single();
 
       if (inserted) {

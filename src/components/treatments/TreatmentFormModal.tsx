@@ -16,6 +16,7 @@ interface LocalGoal {
   done: boolean;
   source: GoalSource;
   originalDone?: boolean; // for DB goals: snapshot for change detection
+  categoryId?: string | null;
 }
 
 // Sync goals to patient_goals table
@@ -32,7 +33,7 @@ async function syncGoals(
   // Insert new goals (upsert to handle duplicate text gracefully)
   const toInsert = goals
     .filter(g => g.source === "new" && g.text.trim())
-    .map(g => ({ patient_id: patientId, text: g.text.trim(), done: g.done }));
+    .map(g => ({ patient_id: patientId, text: g.text.trim(), done: g.done, category_id: g.categoryId ?? null }));
   if (toInsert.length > 0) {
     await supabase.from("patient_goals").upsert(toInsert, { onConflict: "patient_id,text" });
   }
@@ -122,10 +123,10 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   }, [treatment?.id]);
 
   // ── Goals ──────────────────────────────────
-  const addGoal = (text: string) =>
+  const addGoal = (text: string, categoryId?: string | null) =>
     setGoals((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), text, done: false, source: "new" as GoalSource },
+      { id: crypto.randomUUID(), text, done: false, source: "new" as GoalSource, categoryId },
     ]);
 
   const toggleGoal = (id: string) =>

@@ -11,13 +11,13 @@ interface Props {
 export function PatientGoalsTab({ patientId }: Props) {
   const { data: goals, loading, refetch } = usePatientGoals(patientId);
 
-  const handleAdd = async (text: string) => {
+  const handleAdd = async (text: string, categoryId?: string | null) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     await supabase
       .from("patient_goals")
       .upsert(
-        { patient_id: patientId, text: trimmed, done: false, sort_order: goals.length * 10 },
+        { patient_id: patientId, text: trimmed, done: false, sort_order: goals.length * 10, category_id: categoryId ?? null },
         { onConflict: "patient_id,text", ignoreDuplicates: true }
       );
     refetch();

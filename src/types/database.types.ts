@@ -53,6 +53,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      goal_categories: {
+        Row: {
+          id: string;
+          name: string;
+          color: string;
+          sort_order: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          color?: string;
+          sort_order?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          color?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
       patient_goals: {
         Row: {
           id: string;
@@ -60,6 +84,7 @@ export type Database = {
           text: string;
           done: boolean;
           sort_order: number;
+          category_id: string | null;
           created_by: string | null;
           created_at: string;
         };
@@ -69,6 +94,7 @@ export type Database = {
           text: string;
           done?: boolean;
           sort_order?: number;
+          category_id?: string | null;
           created_by?: string | null;
           created_at?: string;
         };
@@ -76,6 +102,7 @@ export type Database = {
           text?: string;
           done?: boolean;
           sort_order?: number;
+          category_id?: string | null;
         };
         Relationships: [
           {
@@ -413,6 +440,7 @@ export type Database = {
           id: string;
           text: string;
           use_count: number;
+          category_id: string | null;
           created_by: string | null;
           created_at: string;
         };
@@ -420,12 +448,14 @@ export type Database = {
           id?: string;
           text: string;
           use_count?: number;
+          category_id?: string | null;
           created_by?: string | null;
           created_at?: string;
         };
         Update: {
           text?: string;
           use_count?: number;
+          category_id?: string | null;
         };
         Relationships: [];
       };
