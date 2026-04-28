@@ -19,24 +19,47 @@ interface LocalGoal {
   categoryId?: string | null;
 }
 
-// Sync goals to patient_goals table.
-// Removing a goal from the treatment view never deletes it from the patient —
-// only done-status changes and new goals are persisted.
+// Sync goals to patient_goals + save treatment_goals snapshot.
+// Removing a goal from the treatment view never deletes it from patient_goals.
 async function syncGoals(
   goals: LocalGoal[],
   patientId: string,
+  treatmentId: string,
 ): Promise<void> {
-  // Update done status for DB goals whose status changed
+  // 1. Update done status for DB goals whose status changed
   for (const g of goals.filter(g => g.source === "db" && g.done !== g.originalDone)) {
     await supabase.from("patient_goals").update({ done: g.done }).eq("id", g.id);
   }
 
-  // Insert new goals (upsert to handle duplicate text gracefully)
-  const toInsert = goals
-    .filter(g => g.source === "new" && g.text.trim())
-    .map(g => ({ patient_id: patientId, text: g.text.trim(), done: g.done, category_id: g.categoryId ?? null }));
-  if (toInsert.length > 0) {
-    await supabase.from("patient_goals").upsert(toInsert, { onConflict: "patient_id,text" });
+  // 2. Upsert new goals into patient_goals
+  const newGoals = goals.filter(g => g.source === "new" && g.text.trim());
+  if (newGoals.length > 0) {
+    await supabase.from("patient_goals").upsert(
+      newGoals.map(g => ({ patient_id: patientId, text: g.text.trim(), done: g.done, category_id: g.categoryId ?? null })),
+      { onConflict: "patient_id,text" }
+    );
+  }
+
+  // 3. Resolve IDs of newly inserted goals
+  let newGoalIds: string[] = [];
+  if (newGoals.length > 0) {
+    const { data: inserted } = await supabase
+      .from("patient_goals")
+      .select("id")
+      .eq("patient_id", patientId)
+      .in("text", newGoals.map(g => g.text.trim()));
+    newGoalIds = inserted?.map(g => g.id) ?? [];
+  }
+
+  // 4. Save treatment_goals snapshot (replace existing)
+  const dbGoalIds = goals.filter(g => g.source === "db").map(g => g.id);
+  const allGoalIds = [...dbGoalIds, ...newGoalIds];
+
+  await supabase.from("treatment_goals").delete().eq("treatment_id", treatmentId);
+  if (allGoalIds.length > 0) {
+    await supabase.from("treatment_goals").insert(
+      allGoalIds.map(goal_id => ({ treatment_id: treatmentId, goal_id }))
+    );
   }
 }
 
@@ -81,27 +104,57 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Load goals from patient_goals table ──
+  // ── Load goals ────────────────────────────────────────────────────────────
+  // Edit mode   → load goals from this treatment's treatment_goals snapshot
+  //               (fallback: all patient_goals for pre-migration treatments)
+  // New mode    → load goals from the LAST treatment's snapshot (empty if none)
   useEffect(() => {
-    supabase
-      .from("patient_goals")
-      .select("*")
-      .eq("patient_id", patientId)
-      .order("sort_order")
-      .order("created_at")
-      .then(({ data }) => {
-        if (!data) return;
-        setGoals(
-          data.map(g => ({
-            id: g.id,
-            text: g.text,
-            done: g.done,
-            source: "db" as GoalSource,
-            originalDone: g.done,
-          }))
-        );
-      });
-  }, [patientId]);
+    const toLocal = (rows: { id: string; text: string; done: boolean; category_id: string | null }[]) =>
+      rows.map(g => ({
+        id: g.id, text: g.text, done: g.done,
+        source: "db" as GoalSource, originalDone: g.done,
+        categoryId: g.category_id,
+      }));
+
+    const loadFromTreatmentSnapshot = async (treatmentId: string) => {
+      const { data: tg } = await supabase
+        .from("treatment_goals")
+        .select("goal_id")
+        .eq("treatment_id", treatmentId);
+      if (!tg || tg.length === 0) return null; // no snapshot
+      const { data: rows } = await supabase
+        .from("patient_goals")
+        .select("id, text, done, category_id")
+        .in("id", tg.map(r => r.goal_id))
+        .order("sort_order").order("created_at");
+      return toLocal(rows ?? []);
+    };
+
+    const load = async () => {
+      if (treatment?.id) {
+        // Editing — load this treatment's snapshot, fallback to all goals
+        const fromSnapshot = await loadFromTreatmentSnapshot(treatment.id);
+        if (fromSnapshot) { setGoals(fromSnapshot); return; }
+        const { data: rows } = await supabase
+          .from("patient_goals").select("id, text, done, category_id")
+          .eq("patient_id", patientId).order("sort_order").order("created_at");
+        setGoals(toLocal(rows ?? []));
+      } else {
+        // New treatment — load from last treatment's snapshot
+        const { data: last } = await supabase
+          .from("treatments").select("id")
+          .eq("patient_id", patientId)
+          .order("session_date", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1).maybeSingle();
+        if (!last) { setGoals([]); return; }
+        const fromSnapshot = await loadFromTreatmentSnapshot(last.id);
+        setGoals(fromSnapshot ?? []);
+      }
+    };
+
+    load();
+  }, [patientId, treatment?.id]);
 
   // Fetch existing files when editing
   useEffect(() => {
@@ -191,8 +244,10 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       treatmentId = data?.id;
     }
 
-    // Sync goals to patient_goals table (done-status changes + new goals only)
-    await syncGoals(goals, patientId);
+    // Sync goals to patient_goals table + save treatment_goals snapshot
+    if (treatmentId) {
+      await syncGoals(goals, patientId, treatmentId);
+    }
 
     if (treatmentId && pendingFiles.length > 0) {
       await uploadPendingFiles(treatmentId);

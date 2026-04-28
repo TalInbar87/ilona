@@ -1,6 +1,5 @@
 import { Target, CheckSquare, Square, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { GoalPicker } from "./GoalPicker";
 import { usePatientGoals } from "../../hooks/usePatientGoals";
 import type { PatientGoal } from "../../types";
 
@@ -10,18 +9,6 @@ interface Props {
 
 export function PatientGoalsTab({ patientId }: Props) {
   const { data: goals, loading, refetch } = usePatientGoals(patientId);
-
-  const handleAdd = async (text: string, categoryId?: string | null) => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    await supabase
-      .from("patient_goals")
-      .upsert(
-        { patient_id: patientId, text: trimmed, done: false, sort_order: goals.length * 10, category_id: categoryId ?? null },
-        { onConflict: "patient_id,text", ignoreDuplicates: true }
-      );
-    refetch();
-  };
 
   const handleToggle = async (goal: PatientGoal) => {
     await supabase
@@ -60,14 +47,11 @@ export function PatientGoalsTab({ patientId }: Props) {
         </span>
       </div>
 
-      {/* Add */}
-      <GoalPicker onAdd={handleAdd} colorScheme="sky" />
-
       {/* Empty state */}
       {goals.length === 0 && (
         <div className="text-center py-10 text-gray-400">
           <Target className="w-10 h-10 mx-auto mb-2 text-gray-200" />
-          <p className="text-sm">אין מטרות עדיין — הוסף את הראשונה</p>
+          <p className="text-sm">אין מטרות עדיין — ניתן להוסיף דרך תיעוד טיפול</p>
         </div>
       )}
 

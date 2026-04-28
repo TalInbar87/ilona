@@ -560,6 +560,40 @@ export type Database = {
           }
         ];
       };
+      treatment_goals: {
+        Row: {
+          id: string;
+          treatment_id: string;
+          goal_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          treatment_id: string;
+          goal_id: string;
+          created_at?: string;
+        };
+        Update: {
+          treatment_id?: string;
+          goal_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "treatment_goals_treatment_id_fkey";
+            columns: ["treatment_id"];
+            isOneToOne: false;
+            referencedRelation: "treatments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "treatment_goals_goal_id_fkey";
+            columns: ["goal_id"];
+            isOneToOne: false;
+            referencedRelation: "patient_goals";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       patients_with_stats: {
