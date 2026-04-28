@@ -99,15 +99,23 @@ export function CalendarView({
   const calendarRef = useRef<FullCalendar>(null);
   const refetchAll = () => { refetchAppts(); refetchMeetings(); };
 
-  const appointmentEvents: EventInput[] = appointments.map((a) => ({
-    id: `appt-${a.id}`,
-    title: (a as any).patients?.full_name ?? "מטופל",
-    start: a.start_time,
-    end: a.end_time,
-    backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.scheduled,
-    borderColor: "transparent",
-    extendedProps: { type: "appointment", appointment: a },
-  }));
+  const appointmentEvents: EventInput[] = appointments.map((a) => {
+    const isLast = a.series_id != null && a.series_index === a.series_total;
+    const isSecondToLast = a.series_id != null && a.series_index != null && a.series_total != null
+      && a.series_index === a.series_total - 1;
+    const isEnding = isLast || isSecondToLast;
+
+    return {
+      id: `appt-${a.id}`,
+      title: `${isLast ? "⚠️ " : ""}${(a as any).patients?.full_name ?? "מטופל"}`,
+      start: a.start_time,
+      end: a.end_time,
+      backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.scheduled,
+      borderColor: isEnding ? "#f59e0b" : "transparent",
+      classNames: isEnding ? ["series-ending"] : [],
+      extendedProps: { type: "appointment", appointment: a },
+    };
+  });
 
   const meetingEvents: EventInput[] = meetings.map((m) => ({
     id: `meet-${m.id}`,

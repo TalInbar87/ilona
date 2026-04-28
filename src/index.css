@@ -37,3 +37,10 @@
     @apply block text-sm font-medium text-gray-700 mb-1;
   }
 }
+
+/* Series-ending appointment: amber border on FullCalendar events */
+.fc .series-ending {
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-color: #f59e0b !important;
+}

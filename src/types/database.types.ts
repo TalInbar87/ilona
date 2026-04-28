@@ -515,6 +515,9 @@ export type Database = {
           status: "scheduled" | "completed" | "cancelled" | "no_show";
           treatment_id: string | null;
           notes: string | null;
+          series_id: string | null;
+          series_total: number | null;
+          series_index: number | null;
           created_at: string;
           created_by: string | null;
         };
@@ -527,6 +530,9 @@ export type Database = {
           status?: "scheduled" | "completed" | "cancelled" | "no_show";
           treatment_id?: string | null;
           notes?: string | null;
+          series_id?: string | null;
+          series_total?: number | null;
+          series_index?: number | null;
           created_at?: string;
           created_by?: string | null;
         };
@@ -539,6 +545,9 @@ export type Database = {
           status?: "scheduled" | "completed" | "cancelled" | "no_show";
           treatment_id?: string | null;
           notes?: string | null;
+          series_id?: string | null;
+          series_total?: number | null;
+          series_index?: number | null;
           created_by?: string | null;
         };
         Relationships: [
