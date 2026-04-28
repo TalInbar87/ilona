@@ -13,27 +13,17 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useTreatment } from "../hooks/useTreatment";
+import { usePatientGoals } from "../hooks/usePatientGoals";
 import { formatDate, formatDateTime } from "../lib/utils";
 import { FileItem } from "../components/files/FileItem";
 import { TreatmentFormModal } from "../components/treatments/TreatmentFormModal";
 import { supabase, STORAGE_BUCKETS } from "../lib/supabase";
 
-// ── Goals display ─────────────────────────────
-interface GoalItem { id: string; text: string; done: boolean; }
-
-function parseGoals(raw: string | null | undefined): GoalItem[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {}
-  return [{ id: "0", text: raw, done: false }];
-}
-
 export function TreatmentDetailPage() {
   const { patientId, treatmentId } = useParams<{ patientId: string; treatmentId: string }>();
   const navigate = useNavigate();
   const { treatment, files, loading, refetch } = useTreatment(treatmentId);
+  const { data: goals } = usePatientGoals(patientId);
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -77,7 +67,8 @@ export function TreatmentDetailPage() {
     return <div className="p-6 text-center text-red-500">הטיפול לא נמצא</div>;
   }
 
-  const goals = parseGoals(treatment.summary);
+  const activeGoals = goals.filter(g => !g.done);
+  const doneGoals   = goals.filter(g => g.done);
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto">
@@ -132,18 +123,31 @@ export function TreatmentDetailPage() {
             <CheckSquare className="w-4 h-4 text-sky-500" />
             מטרות טיפול
           </h3>
-          <ul className="space-y-2">
-            {goals.map((g) => (
-              <li key={g.id} className="flex items-center gap-2.5">
-                {g.done
-                  ? <CheckSquare className="w-4 h-4 text-sky-500 shrink-0" />
-                  : <Square className="w-4 h-4 text-gray-300 shrink-0" />}
-                <span className={`text-sm ${g.done ? "line-through text-gray-400" : "text-gray-700"}`}>
-                  {g.text}
-                </span>
-              </li>
-            ))}
-          </ul>
+
+          {activeGoals.length > 0 && (
+            <ul className="space-y-2 mb-3">
+              {activeGoals.map((g) => (
+                <li key={g.id} className="flex items-center gap-2.5">
+                  <Square className="w-4 h-4 text-gray-300 shrink-0" />
+                  <span className="text-sm text-gray-700">{g.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {doneGoals.length > 0 && (
+            <>
+              <p className="text-xs font-medium text-gray-400 mb-1.5">🏅 הושלמו</p>
+              <ul className="space-y-2">
+                {doneGoals.map((g) => (
+                  <li key={g.id} className="flex items-center gap-2.5">
+                    <CheckSquare className="w-4 h-4 text-sky-500 shrink-0" />
+                    <span className="text-sm line-through text-gray-400">{g.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       )}
 
