@@ -484,15 +484,6 @@ export function AppointmentModal({ initialStart, initialEnd, appointment, onClos
             <p className="text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</p>
           )}
 
-          {/* Series info banner (edit mode) */}
-          {isEdit && appointment?.series_id && (
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-sky-50 border border-sky-200 text-sm text-sky-800">
-              <Repeat className="w-4 h-4 shrink-0" />
-              <span>
-                תור {appointment.series_index ?? "?"} מתוך {appointment.series_total ?? "?"} בסדרה חוזרת
-              </span>
-            </div>
-          )}
 
           <div>
             <label className="label-base">מטופל *</label>
