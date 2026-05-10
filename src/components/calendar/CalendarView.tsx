@@ -178,6 +178,7 @@ export function CalendarView({
           nowIndicator
           businessHours={{ daysOfWeek: [0, 1, 2, 3, 4], startTime: "08:00", endTime: "18:00" }}
           eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+          eventMinHeight={36}
         />
       </div>
 
