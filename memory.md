@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-05-03 (סשן נוכחי)
+
+### תיקוני באגים מהלקוח
+
+**באג 1 — כפל מטרות בתיעוד טיפול:**
+- `addGoal` ב-`TreatmentFormModal` לא בדק כפילות לפני הוספה
+- **תיקון:** בדיקה לפי טקסט לפני הוספה:
+  - מטרה קיימת + הושלמה → מוחזרת לפעילה (מתעדכן ב-`patient_goals` בשמירה)
+  - מטרה קיימת + פעילה → no-op
+  - חדשה → נוסף רגיל
+
+**באג 2 — טופס טיפול נפתח שוב לאחר שמירה (מלוח שנה):**
+- שורש הבעיה: `onTreatmentCountChange()` → `refetch` → `loading: true` → PatientDetailPage מציג ספינר → TreatmentsTab נמחק ומורכב מחדש → `useState(autoOpen)` מתאתחל ל-`true` כי `location.state` לא נוקה
+- **תיקון:** `useEffect` ב-PatientDetailPage שמנקה `location.state` מיד בעלייה: `navigate(pathname, { replace: true, state: null })`
+
+### Idle Session Timeout — ניתוק אוטומטי
+- נוסף hook `useIdleTimeout` — מנטר חוסר פעילות (עכבר/מקלדת/מגע)
+- אחרי 30 דק' חוסר פעילות → מוצג דיאלוג אזהרה עם ספירה לאחור (60 שניות)
+- אחרי הספירה → `supabase.auth.signOut()` + ניווט ל-login
+- כפתור "המשך" מאפס את הטיימר
+- `IdleTimeoutModal` ב-`AppShell` — פעיל בכל הדפים
+
+---
+
 ## 2026-05-03
 
 ### ייצוא טיפולים ל-PDF

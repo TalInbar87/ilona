@@ -277,6 +277,43 @@ supabase
 
 ---
 
+## Auth Store (`src/store/authStore.ts`)
+
+Zustand store — state מרכזי לאימות.
+
+| שדה | תיאור |
+|-----|--------|
+| `session` | Supabase Session |
+| `user` | Supabase User |
+| `isSuperuser` | מ-`profiles.is_superuser` |
+| `forcePasswordChange` | מ-`app_metadata.force_password_change` |
+| `firstName`, `lastName` | מ-`profiles` |
+| `loading` | auth session loading (שומר ProtectedRoute על spinner) |
+| `superuserLoading` | profile loading |
+
+**`init()`** — נקרא ב-`App.tsx` פעם אחת. טוען session + מאזין ל-`onAuthStateChange`.
+**`signOut()`** — `supabase.auth.signOut()` + איפוס state.
+**`refreshProfile()`** — refetch בלבד, ללא loading state.
+
+`fetchProfile` — עם timeout של 5 שניות ו-fallback. אף פעם לא throws.
+
+## Idle Session Timeout
+
+**קבצים:** `src/hooks/useIdleTimeout.ts`, `src/components/layout/IdleTimeoutModal.tsx`
+**מיקום:** מוטמע ב-`AppShell` — פעיל בכל הדפים המוגנים.
+
+**פרמטרים:**
+- `IDLE_TIMEOUT_MS = 30 * 60 * 1000` (30 דקות)
+- `WARNING_SECONDS = 60` (ספירה לאחור)
+
+**אירועי activity:** `mousemove`, `mousedown`, `keydown`, `touchstart`, `scroll`
+
+**זרימה:**
+```
+30 דק' ללא פעילות → showWarning=true → ספירה 60→0 → signOut() + navigate("/login")
+פעילות / לחיצת "המשך" → reset timer → showWarning=false
+```
+
 ## FinBot API (עתידי)
 
 חיבור לממשק חשבוניות:

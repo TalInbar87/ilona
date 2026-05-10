@@ -4,6 +4,8 @@ import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, M
 import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabase";
 import { cn } from "../../lib/utils";
+import { useIdleTimeout } from "../../hooks/useIdleTimeout";
+import { IdleTimeoutModal } from "./IdleTimeoutModal";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "ראשי" },
@@ -31,6 +33,9 @@ export function AppShell() {
     await signOut();
     navigate("/login");
   };
+
+  // Idle timeout — auto sign-out after 30 min of inactivity
+  const { showWarning, secondsLeft, resetTimer } = useIdleTimeout(handleSignOut);
 
   const startEditProfile = () => {
     setProfileForm({ first_name: firstName ?? "", last_name: lastName ?? "" });
@@ -213,6 +218,15 @@ export function AppShell() {
       <main className="flex-1 overflow-auto md:pt-0 pt-14">
         <Outlet />
       </main>
+
+      {/* Idle timeout warning */}
+      {showWarning && (
+        <IdleTimeoutModal
+          secondsLeft={secondsLeft}
+          onContinue={resetTimer}
+          onSignOut={handleSignOut}
+        />
+      )}
     </div>
   );
 }
