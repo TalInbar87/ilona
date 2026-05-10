@@ -38,6 +38,25 @@
   }
 }
 
+/* ── iOS / iPadOS input fixes ─────────────────────────────────────────────────
+   1. font-size ≥ 16px prevents Safari auto-zoom on input focus
+   2. -webkit-appearance: none gives consistent styling for date/time fields
+   3. min-height ensures a comfortable tap target                            */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.5rem;
+    line-height: normal;
+  }
+}
+
 /* Series-ending appointment: amber border on FullCalendar events */
 .fc .series-ending {
   border-width: 2px !important;
