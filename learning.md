@@ -162,11 +162,9 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 | v16 | `patient_goals` — מטרות ברמת מטופל (במקום JSON ב-treatments) |
 | v17 | `goal_categories` + `category_id` ל-patient_goals ו-treatment_goals_bank |
 | v18 | `series_id`, `series_total`, `series_index` ל-appointments |
-| **v19** | **`treatment_goals` junction table — snapshot per treatment** ← **חייב הרצה** |
-| v20 | backfill treatment_goals לטיפול האחרון בלבד (מיותר אם מריצים v21) |
-| **v21** | **backfill treatment_goals לכל הטיפולים** ← **חייב הרצה** |
-
-**סדר הרצה נדרש: v19 ← v21**
+| **v19** | `treatment_goals` junction table — snapshot per treatment ✅ הורץ |
+| v20 | backfill treatment_goals לטיפול האחרון בלבד (מיותר, v21 מחליפו) |
+| **v21** | backfill treatment_goals לכל הטיפולים ✅ הורץ |
 
 ---
 
