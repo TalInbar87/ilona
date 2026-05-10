@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowRight,
@@ -38,6 +38,14 @@ export function PatientDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>(autoOpenTreatment ? "treatments" : "details");
   const [showEdit, setShowEdit] = useState(false);
   const [archiving, setArchiving] = useState(false);
+
+  // Clear the auto-open state from location immediately so that if TreatmentsTab
+  // unmounts/remounts (e.g. due to a refetch loading cycle) it won't re-open the form.
+  useEffect(() => {
+    if (autoOpenTreatment) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleArchiveToggle = async () => {
     if (!patient) return;

@@ -171,11 +171,21 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
   }, [treatment?.id]);
 
   // ── Goals ──────────────────────────────────
-  const addGoal = (text: string, categoryId?: string | null) =>
-    setGoals((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), text, done: false, source: "new" as GoalSource, categoryId },
-    ]);
+  const addGoal = (text: string, categoryId?: string | null) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setGoals(prev => {
+      // Goal already in list?
+      const existing = prev.find(g => g.text.trim() === trimmed);
+      if (existing) {
+        // Was completed → restore to active (updates patient_goals on save via syncGoals)
+        if (existing.done) return prev.map(g => g.id === existing.id ? { ...g, done: false } : g);
+        // Already active → no-op
+        return prev;
+      }
+      return [...prev, { id: crypto.randomUUID(), text: trimmed, done: false, source: "new" as GoalSource, categoryId }];
+    });
+  };
 
   const toggleGoal = (id: string) =>
     setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, done: !g.done } : g)));
