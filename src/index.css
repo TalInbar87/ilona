@@ -44,3 +44,23 @@
   border-style: solid !important;
   border-color: #f59e0b !important;
 }
+
+/* Prevent event text from being clipped in short time slots */
+.fc .fc-timegrid-event .fc-event-main {
+  padding: 1px 3px;
+  overflow: hidden;
+}
+
+.fc .fc-timegrid-event .fc-event-title {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc .fc-timegrid-event .fc-event-time {
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
