@@ -167,7 +167,7 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 | **v19** | `treatment_goals` junction table — snapshot per treatment ✅ הורץ |
 | v20 | backfill treatment_goals לטיפול האחרון בלבד (מיותר, v21 מחליפו) |
 | **v21** | backfill treatment_goals לכל הטיפולים ✅ הורץ |
-| **v22** | `hearing_test_id` ל-patient_files — קבצים לבדיקות שמיעה |
+| **v22** | `hearing_test_id` ל-patient_files — קבצים לבדיקות שמיעה ✅ הורץ |
 
 ---
 

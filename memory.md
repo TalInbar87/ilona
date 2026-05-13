@@ -8,7 +8,7 @@
 
 ### העלאת קבצים בבדיקות שמיעה
 
-- נוסף `hearing_test_id` לטבלת `patient_files` (migration-v22, **צריך להריץ בסופאבייס**)
+- נוסף `hearing_test_id` לטבלת `patient_files` (migration-v22 ✅ הורץ)
 - `useHearingTests` מחזיר עכשיו `HearingTestWithFiles[]` — טוען קבצים במקביל לבדיקות
 - `HearingTestsTab` — כל כרטיס בדיקה תומך בהעלאה/הצגה/מחיקה של קבצים
 - storage path: `{patientId}/hearing/{testId}/{uuid}.{ext}` ב-bucket `patient-files`
