@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-05-13 (סשן נוכחי)
+
+### קבצים בפרטים אישיים + תיקון מחיקת storage
+
+**קבצים בטאב פרטים אישיים:**
+- נוסף קומפוננט `PatientFilesSection` — טוען קבצים שאין להם `diagnosis_id` ולא `hearing_test_id`
+- storage path: `{patientId}/general/{uuid}.{ext}` ב-bucket `patient-files`
+- מוטמע בתחתית טאב "פרטים אישיים" ב-`PatientDetailPage`
+
+**תיקון bug — מחיקת הורה לא מפינה storage:**
+- `HearingTestCard.handleDelete` — מוחק קבצים מ-storage לפני מחיקת הבדיקה
+- `DiagnosesTab.handleDelete` — מוחק קבצים מ-storage לפני מחיקת האבחון
+- CASCADE ב-DB מוחק שורות מ-`patient_files` אבל לא את הקבצים בפועל
+
+---
+
 ## 2026-05-13
 
 ### העלאת קבצים בבדיקות שמיעה

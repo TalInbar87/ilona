@@ -132,6 +132,9 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 `id, patient_id, diagnosis_id, hearing_test_id, file_name, storage_path, mime_type, file_size, uploaded_at, uploaded_by`
 
 `diagnosis_id` ו-`hearing_test_id` — שניהם nullable, FK עם ON DELETE CASCADE. קובץ שייך לאחד מהם.
+קבצים ללא שניהם (שני שדות `null`) = קבצים כלליים של המטופל (מ-PatientFilesSection בטאב פרטים אישיים).
+
+**אזהרה:** `ON DELETE CASCADE` מוחק שורות DB בלבד — לא את הקבצים בפועל מ-Storage. לכן בכל מחיקת הורה (אבחון / בדיקת שמיעה) חייבים לקרוא ל-`storage.remove()` לפני מחיקת השורה.
 
 ---
 
@@ -270,6 +273,7 @@ supabase
 | `TreatmentsPrintModal` | תצוגה מקדימה + הדפסת כל הטיפולים כ-PDF |
 | `TreatmentsTab` | רשימת טיפולים + כפתורי ייצא/חדש |
 | `PatientGoalsTab` | הצגת מטרות מטופל (toggle/delete בלבד — אין הוספה) |
+| `PatientFilesSection` | קבצים כלליים של מטופל (טאב פרטים אישיים) — ללא diagnosis/hearing_test |
 | `GoalPicker` | input + autocomplete מ-bank (בשימוש ב-TreatmentFormModal בלבד) |
 | `AppointmentModal` | multi-phase: form → checking → conflict → confirm |
 | `CalendarView` | FullCalendar + סימון series-ending |

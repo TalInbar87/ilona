@@ -193,6 +193,9 @@ function HearingTestCard({
 
   const handleDelete = async () => {
     if (!confirm("למחוק את בדיקת השמיעה?")) return;
+    for (const f of test.files) {
+      await supabase.storage.from(STORAGE_BUCKETS.PATIENT_FILES).remove([f.storage_path]);
+    }
     await supabase.from("hearing_tests").delete().eq("id", test.id);
     onRefetch();
   };

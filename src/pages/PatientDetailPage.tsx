@@ -20,6 +20,7 @@ import { DiagnosesTab } from "../components/diagnoses/DiagnosesTab";
 import { HearingTestsTab } from "../components/hearingTests/HearingTestsTab";
 import { TreatmentsTab } from "../components/treatments/TreatmentsTab";
 import { PatientGoalsTab } from "../components/goals/PatientGoalsTab";
+import { PatientFilesSection } from "../components/patients/PatientFilesSection";
 import type { TreatmentPrefill } from "../components/treatments/TreatmentFormModal";
 
 type Tab = "details" | "hearing" | "diagnoses" | "treatments" | "goals";
@@ -198,15 +199,18 @@ export function PatientDetailPage() {
 
         <div className="p-5">
           {activeTab === "details" && (
-            <div className="space-y-3">
-              <Detail label="שם מלא" value={patient.full_name} />
-              <Detail label="מספר ת.ז." value={patient.id_number} mono />
-              <Detail label="תאריך לידה" value={formatDate(patient.date_of_birth)} />
-              <Detail label="גיל" value={calcAgeLabel(patient.date_of_birth)} />
-              {patient.phone && <Detail label="טלפון" value={patient.phone} href={`tel:${patient.phone}`} />}
-              {patient.email && <Detail label="מייל" value={patient.email} href={`mailto:${patient.email}`} />}
-              {patient.parent_name && <Detail label="שם הורה" value={patient.parent_name} />}
-              {patient.notes && <Detail label="הערות" value={patient.notes} />}
+            <div>
+              <div className="space-y-3">
+                <Detail label="שם מלא" value={patient.full_name} />
+                <Detail label="מספר ת.ז." value={patient.id_number} mono />
+                <Detail label="תאריך לידה" value={formatDate(patient.date_of_birth)} />
+                <Detail label="גיל" value={calcAgeLabel(patient.date_of_birth)} />
+                {patient.phone && <Detail label="טלפון" value={patient.phone} href={`tel:${patient.phone}`} />}
+                {patient.email && <Detail label="מייל" value={patient.email} href={`mailto:${patient.email}`} />}
+                {patient.parent_name && <Detail label="שם הורה" value={patient.parent_name} />}
+                {patient.notes && <Detail label="הערות" value={patient.notes} />}
+              </div>
+              <PatientFilesSection patientId={patient.id} />
             </div>
           )}
           {activeTab === "hearing" && (

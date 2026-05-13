@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus, FileText, Upload, CheckSquare, Square, Trash2, Pencil, Check } from "lucide-react";
 import { useDiagnoses } from "../../hooks/useDiagnoses";
+import type { DiagnosisWithFiles } from "../../hooks/useDiagnoses";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { formatDate } from "../../lib/utils";
 import { FileItem } from "../files/FileItem";
@@ -51,9 +52,12 @@ export function DiagnosesTab({ patientId }: Props) {
     refetch();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (diagnosis: DiagnosisWithFiles) => {
     if (!confirm("למחוק את האבחון?")) return;
-    await supabase.from("diagnoses").delete().eq("id", id);
+    for (const f of diagnosis.files) {
+      await supabase.storage.from(STORAGE_BUCKETS.PATIENT_FILES).remove([f.storage_path]);
+    }
+    await supabase.from("diagnoses").delete().eq("id", diagnosis.id);
     refetch();
   };
 
@@ -101,7 +105,7 @@ export function DiagnosesTab({ patientId }: Props) {
               key={d.id}
               diagnosis={d}
               patientId={patientId}
-              onDelete={() => handleDelete(d.id)}
+              onDelete={() => handleDelete(d)}
               onRefetch={refetch}
             />
           ))}
