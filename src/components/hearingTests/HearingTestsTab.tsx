@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Plus, Ear, Pencil, Trash2, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Ear, Pencil, Trash2, Check, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { useHearingTests } from "../../hooks/useHearingTests";
-import { supabase } from "../../lib/supabase";
+import type { HearingTestWithFiles } from "../../hooks/useHearingTests";
+import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { formatDate } from "../../lib/utils";
+import { FileItem } from "../files/FileItem";
 import type { HearingTest } from "../../types";
 
 interface Props {
@@ -80,7 +82,7 @@ export function HearingTestsTab({ patientId }: Props) {
       ) : (
         <div className="space-y-3">
           {tests.map((t) => (
-            <HearingTestCard key={t.id} test={t} onRefetch={refetch} />
+            <HearingTestCard key={t.id} test={t} patientId={patientId} onRefetch={refetch} />
           ))}
         </div>
       )}
@@ -157,7 +159,15 @@ function HearingTestForm({
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-function HearingTestCard({ test, onRefetch }: { test: HearingTest; onRefetch: () => void }) {
+function HearingTestCard({
+  test,
+  patientId,
+  onRefetch,
+}: {
+  test: HearingTestWithFiles;
+  patientId: string;
+  onRefetch: () => void;
+}) {
   const [editing, setEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -166,6 +176,8 @@ function HearingTestCard({ test, onRefetch }: { test: HearingTest; onRefetch: ()
     notes: test.notes ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,6 +208,34 @@ function HearingTestCard({ test, onRefetch }: { test: HearingTest; onRefetch: ()
     setExpanded(true);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    const ext = file.name.split(".").pop() ?? "bin";
+    const mime = file.type || (ext === "pdf" ? "application/pdf" : "application/octet-stream");
+    const storagePath = `${patientId}/hearing/${test.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from(STORAGE_BUCKETS.PATIENT_FILES)
+      .upload(storagePath, file, { contentType: mime });
+    if (uploadErr) {
+      setUploadError(uploadErr.message);
+    } else {
+      await supabase.from("patient_files").insert({
+        patient_id: patientId,
+        hearing_test_id: test.id,
+        file_name: file.name,
+        storage_path: storagePath,
+        mime_type: mime,
+        file_size: file.size,
+      });
+      onRefetch();
+    }
+    setUploading(false);
+    e.target.value = "";
+  };
+
   if (editing) {
     return (
       <HearingTestForm
@@ -210,7 +250,7 @@ function HearingTestCard({ test, onRefetch }: { test: HearingTest; onRefetch: ()
     );
   }
 
-  const hasDetails = !!(test.results || test.notes);
+  const hasDetails = !!(test.results || test.notes || test.files.length > 0);
 
   return (
     <div className="border border-gray-100 rounded-xl overflow-hidden">
@@ -223,6 +263,9 @@ function HearingTestCard({ test, onRefetch }: { test: HearingTest; onRefetch: ()
           </span>
           {!expanded && test.results && (
             <p className="text-xs text-gray-400 truncate mt-0.5">{test.results}</p>
+          )}
+          {!expanded && test.files.length > 0 && !test.results && (
+            <p className="text-xs text-gray-400 mt-0.5">{test.files.length} קבצים</p>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -250,7 +293,7 @@ function HearingTestCard({ test, onRefetch }: { test: HearingTest; onRefetch: ()
       </div>
 
       {/* Expanded details */}
-      {expanded && hasDetails && (
+      {expanded && (
         <div className="px-4 pb-3 space-y-2 border-t border-gray-50 pt-2">
           {test.results && (
             <div>
@@ -264,6 +307,38 @@ function HearingTestCard({ test, onRefetch }: { test: HearingTest; onRefetch: ()
               <p className="text-sm text-gray-600 whitespace-pre-wrap">{test.notes}</p>
             </div>
           )}
+
+          {/* Files */}
+          {test.files.length > 0 && (
+            <div className="mt-1 space-y-1">
+              {test.files.map((f) => (
+                <FileItem key={f.id} file={f} bucket="PATIENT_FILES" onDeleted={onRefetch} />
+              ))}
+            </div>
+          )}
+
+          {uploadError && <p className="text-xs text-red-500">{uploadError}</p>}
+          <label
+            className={`flex items-center gap-1.5 text-xs text-sky-600 hover:text-sky-700 cursor-pointer pt-1 ${uploading ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            {uploading ? "מעלה..." : "העלאת קובץ"}
+            <input type="file" className="hidden" accept=".pdf,image/*" onChange={handleFileUpload} />
+          </label>
+        </div>
+      )}
+
+      {/* Upload shortcut when collapsed (no details expanded yet) */}
+      {!expanded && !hasDetails && (
+        <div className="px-4 pb-3">
+          {uploadError && <p className="text-xs text-red-500 mb-1">{uploadError}</p>}
+          <label
+            className={`flex items-center gap-1.5 text-xs text-sky-600 hover:text-sky-700 cursor-pointer ${uploading ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            {uploading ? "מעלה..." : "העלאת קובץ"}
+            <input type="file" className="hidden" accept=".pdf,image/*" onChange={handleFileUpload} />
+          </label>
         </div>
       )}
     </div>

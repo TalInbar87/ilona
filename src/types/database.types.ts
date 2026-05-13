@@ -302,6 +302,7 @@ export type Database = {
           id: string;
           patient_id: string;
           diagnosis_id: string | null;
+          hearing_test_id: string | null;
           file_name: string;
           storage_path: string;
           mime_type: string;
@@ -313,6 +314,7 @@ export type Database = {
           id?: string;
           patient_id: string;
           diagnosis_id?: string | null;
+          hearing_test_id?: string | null;
           file_name: string;
           storage_path: string;
           mime_type: string;
@@ -324,6 +326,7 @@ export type Database = {
           id?: string;
           patient_id?: string;
           diagnosis_id?: string | null;
+          hearing_test_id?: string | null;
           file_name?: string;
           storage_path?: string;
           mime_type?: string;

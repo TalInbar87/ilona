@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-05-13
+
+### העלאת קבצים בבדיקות שמיעה
+
+- נוסף `hearing_test_id` לטבלת `patient_files` (migration-v22, **צריך להריץ בסופאבייס**)
+- `useHearingTests` מחזיר עכשיו `HearingTestWithFiles[]` — טוען קבצים במקביל לבדיקות
+- `HearingTestsTab` — כל כרטיס בדיקה תומך בהעלאה/הצגה/מחיקה של קבצים
+- storage path: `{patientId}/hearing/{testId}/{uuid}.{ext}` ב-bucket `patient-files`
+
+---
+
+## 2026-05-10
+
+### תיקוני תצוגה — לוח שנה + מובייל
+
+**לוח שנה — טקסט חתוך באירועים קצרים:**
+- נוסף `eventMinHeight={36}` ל-FullCalendar ב-`CalendarView.tsx` — גובה מינימלי לכל אירוע
+- נוספו CSS overrides ל-`index.css`: `fc-event-title` — `font-size: 0.72rem` + `text-overflow: ellipsis`; `fc-event-time` — `font-size: 0.68rem`
+- אומת בפועל: פגישה של 10 דקות ("ערב שיח מחציית ב גאיה 15:10–15:20") מוצגת כראוי
+
+**iOS/iPadOS — שדות תאריך ושעה:**
+- `font-size: 16px` על כל inputs ב-iOS מונע auto-zoom של Safari (קורה כשגופן < 16px)
+- `-webkit-appearance: none` + `min-height: 2.5rem` לשדות `date`, `time`, `datetime-local`
+- כל זה תחת `@supports (-webkit-touch-callout: none)` — לא משפיע על desktop
+
+---
+
 ## 2026-05-03 (סשן נוכחי)
 
 ### תיקוני באגים מהלקוח

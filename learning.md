@@ -129,7 +129,9 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 `id, is_superuser, first_name, last_name, created_at`
 
 ### `patient_files`
-`id, patient_id, diagnosis_id, file_name, storage_path, mime_type, file_size`
+`id, patient_id, diagnosis_id, hearing_test_id, file_name, storage_path, mime_type, file_size, uploaded_at, uploaded_by`
+
+`diagnosis_id` ו-`hearing_test_id` — שניהם nullable, FK עם ON DELETE CASCADE. קובץ שייך לאחד מהם.
 
 ---
 
@@ -165,6 +167,7 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 | **v19** | `treatment_goals` junction table — snapshot per treatment ✅ הורץ |
 | v20 | backfill treatment_goals לטיפול האחרון בלבד (מיותר, v21 מחליפו) |
 | **v21** | backfill treatment_goals לכל הטיפולים ✅ הורץ |
+| **v22** | `hearing_test_id` ל-patient_files — קבצים לבדיקות שמיעה |
 
 ---
 
@@ -249,7 +252,7 @@ supabase
 | `useTreatments(id)` | patientId | `{ data: Treatment[], loading, error, refetch }` |
 | `useTreatment(id)` | treatmentId | `{ treatment, files, loading, refetch }` |
 | `useDiagnoses(id)` | patientId | `{ data, loading, refetch }` |
-| `useHearingTests(id)` | patientId | `{ data, loading, refetch }` |
+| `useHearingTests(id)` | patientId | `{ data: HearingTestWithFiles[], loading, refetch }` |
 | `useAppointments(...)` | range | `{ data: Appointment[], loading, refetch }` |
 | `useMeetings(...)` | range | `{ data: Meeting[], loading, refetch }` |
 | `useGoalCategories()` | — | `{ data: GoalCategory[], loading, refetch }` |
@@ -294,6 +297,47 @@ Zustand store — state מרכזי לאימות.
 **`refreshProfile()`** — refetch בלבד, ללא loading state.
 
 `fetchProfile` — עם timeout של 5 שניות ו-fallback. אף פעם לא throws.
+
+## FullCalendar — תצוגת אירועים קצרים
+
+**בעיה:** בפגישות קצרות (10–15 דקות) הטקסט נחתך כי ה-event box קטן מדי.
+
+**פתרון:**
+- `eventMinHeight={36}` כ-prop ל-`<FullCalendar>` ב-`CalendarView.tsx` — גובה מינימלי לכל אירוע
+- CSS ב-`index.css`:
+```css
+.fc .fc-timegrid-event .fc-event-main { padding: 1px 3px; overflow: hidden; }
+.fc .fc-timegrid-event .fc-event-title { font-size: 0.72rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc .fc-timegrid-event .fc-event-time  { font-size: 0.68rem; white-space: nowrap; overflow: hidden; }
+```
+
+**אזהרה:** **אל תסיר** את `position: absolute` מ-`.fc-timegrid-event` — זה חלק מ-FullCalendar layout ויישבור את הגריד. הבעיה היא גובה, לא מיקום.
+
+---
+
+## iOS / iPadOS — שדות קלט
+
+**בעיה:** Safari מ-iOS מבצע auto-zoom לשדה שגודל הגופן שלו < 16px בעת focus.
+
+**פתרון ב-`index.css`:**
+```css
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px;
+  }
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.5rem;
+    line-height: normal;
+  }
+}
+```
+`@supports (-webkit-touch-callout: none)` מזהה iOS/iPadOS בלבד — אין השפעה על desktop.
+
+---
 
 ## Idle Session Timeout
 
