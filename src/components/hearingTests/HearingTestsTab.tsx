@@ -5,7 +5,6 @@ import type { HearingTestWithFiles } from "../../hooks/useHearingTests";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { formatDate } from "../../lib/utils";
 import { FileItem } from "../files/FileItem";
-import type { HearingTest } from "../../types";
 
 interface Props {
   patientId: string;
