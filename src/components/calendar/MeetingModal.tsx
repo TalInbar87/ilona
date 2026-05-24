@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Link } from "lucide-react";
+import { X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuthStore } from "../../store/authStore";
 import type { Meeting } from "../../types";
@@ -27,7 +27,6 @@ export function MeetingModal({ initialStart, initialEnd, meeting, onClose, onSav
     end_time: meeting?.end_time
       ? toLocalDatetimeValue(new Date(meeting.end_time))
       : initialEnd ? toLocalDatetimeValue(initialEnd) : "",
-    meeting_url: meeting?.meeting_url ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +42,6 @@ export function MeetingModal({ initialStart, initialEnd, meeting, onClose, onSav
       title: form.title.trim(),
       start_time: new Date(form.start_time).toISOString(),
       end_time: new Date(form.end_time).toISOString(),
-      meeting_url: form.meeting_url.trim() || null,
     };
     const { error: err } = meeting
       ? await supabase.from("meetings").update(payload).eq("id", meeting.id)
@@ -86,33 +84,6 @@ export function MeetingModal({ initialStart, initialEnd, meeting, onClose, onSav
               required
               autoFocus
             />
-          </div>
-
-          {/* Online meeting link */}
-          <div>
-            <label className="label-base flex items-center gap-1.5">
-              <Link className="w-3.5 h-3.5 text-gray-400" />
-              קישור לפגישה אונליין
-            </label>
-            <input
-              type="url"
-              value={form.meeting_url}
-              onChange={(e) => setForm({ ...form, meeting_url: e.target.value })}
-              className="input-base"
-              placeholder="https://zoom.us/j/..."
-              dir="ltr"
-            />
-            {meeting?.meeting_url && (
-              <a
-                href={meeting.meeting_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1.5 flex items-center gap-1.5 text-xs text-sky-600 hover:underline"
-              >
-                <Link className="w-3 h-3" />
-                הצטרפות לפגישה
-              </a>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

@@ -3,6 +3,7 @@ import { X, Upload, Paperclip, Trash2, CheckSquare, Square, Wrench, Lightbulb } 
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
 import { GoalPicker } from "../goals/GoalPicker";
+import { YesNoToggle } from "../common/YesNoToggle";
 import type { Treatment, TreatmentFile } from "../../types";
 
 // ── Goal type ─────────────────────────────────
@@ -503,31 +504,3 @@ export function TreatmentFormModal({ patientId, requiresPayment = false, treatme
   );
 }
 
-function YesNoToggle({ value, onChange }: { value: boolean | null; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex gap-1.5">
-      <button
-        type="button"
-        onClick={() => onChange(true)}
-        className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-          value === true
-            ? "bg-emerald-500 text-white border-emerald-500"
-            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-        }`}
-      >
-        כן
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(false)}
-        className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-          value === false
-            ? "bg-red-500 text-white border-red-500"
-            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-        }`}
-      >
-        לא
-      </button>
-    </div>
-  );
-}

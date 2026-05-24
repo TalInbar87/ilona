@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Link } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useSupervisees } from "../../hooks/useSupervisees";
+import { YesNoToggle } from "../common/YesNoToggle";
 import type { CalendarSupervisionSession } from "../../hooks/useCalendarSupervisionSessions";
 
 function toDateStr(d: Date) {
@@ -17,11 +18,12 @@ interface Props {
   initialStart?: Date;
   initialEnd?: Date;
   session?: CalendarSupervisionSession;
+  requiresPayment?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export function CalendarSupervisionModal({ initialStart, initialEnd, session, onClose, onSaved }: Props) {
+export function CalendarSupervisionModal({ initialStart, initialEnd, session, requiresPayment = false, onClose, onSaved }: Props) {
   const { data: supervisees, loading: superviseesLoading } = useSupervisees();
 
   const durationFromSlot =
@@ -35,7 +37,10 @@ export function CalendarSupervisionModal({ initialStart, initialEnd, session, on
     session_time: session?.session_time ?? (initialStart ? toTimeStr(initialStart) : ""),
     duration_min: session?.duration_min?.toString() ?? durationFromSlot?.toString() ?? "",
     summary: session?.summary ?? "",
+    meeting_url: session?.meeting_url ?? "",
   });
+  const [paymentReceived, setPaymentReceived] = useState<boolean | null>(session?.payment_received ?? null);
+  const [invoiceIssued, setInvoiceIssued]     = useState<boolean | null>(session?.invoice_issued ?? null);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +61,8 @@ export function CalendarSupervisionModal({ initialStart, initialEnd, session, on
       session_time: form.session_time || null,
       duration_min: form.duration_min ? parseInt(form.duration_min) : null,
       summary: form.summary.trim() || null,
+      meeting_url: form.meeting_url.trim() || null,
+      ...(requiresPayment ? { payment_received: paymentReceived, invoice_issued: invoiceIssued } : {}),
     };
     if (session) {
       await supabase.from("supervision_sessions").update(basePayload).eq("id", session.id);
@@ -147,6 +154,42 @@ export function CalendarSupervisionModal({ initialStart, initialEnd, session, on
               max="480"
             />
           </div>
+
+          {/* Meeting URL */}
+          <div>
+            <label className="label-base flex items-center gap-1.5">
+              <Link className="w-3.5 h-3.5 text-gray-400" />
+              קישור לפגישה אונליין
+            </label>
+            <input
+              type="url"
+              value={form.meeting_url}
+              onChange={(e) => setForm({ ...form, meeting_url: e.target.value })}
+              className="input-base"
+              placeholder="https://zoom.us/j/..."
+              dir="ltr"
+            />
+            {session?.meeting_url && (
+              <a href={session.meeting_url} target="_blank" rel="noopener noreferrer"
+                className="mt-1 flex items-center gap-1 text-xs text-sky-600 hover:underline">
+                <Link className="w-3 h-3" />הצטרפות לפגישה
+              </a>
+            )}
+          </div>
+
+          {/* Payment */}
+          {requiresPayment && (
+            <div className="space-y-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">האם התקבל תשלום?</label>
+                <YesNoToggle value={paymentReceived} onChange={setPaymentReceived} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">האם הופקה חשבונית?</label>
+                <YesNoToggle value={invoiceIssued} onChange={setInvoiceIssued} />
+              </div>
+            </div>
+          )}
 
           {/* Summary */}
           <div>

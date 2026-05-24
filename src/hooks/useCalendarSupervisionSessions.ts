@@ -8,7 +8,10 @@ export interface CalendarSupervisionSession {
   session_time: string | null;
   duration_min: number | null;
   summary: string | null;
-  supervisees: { id: string; full_name: string };
+  payment_received: boolean | null;
+  invoice_issued: boolean | null;
+  meeting_url: string | null;
+  supervisees: { id: string; full_name: string; requires_payment: boolean };
 }
 
 export function useCalendarSupervisionSessions(start?: string, end?: string) {
@@ -20,7 +23,7 @@ export function useCalendarSupervisionSessions(start?: string, end?: string) {
     const endDate = end.split("T")[0];
     const { data: rows } = await supabase
       .from("supervision_sessions")
-      .select("id, supervisee_id, session_date, session_time, duration_min, summary, supervisees!supervisee_id(id, full_name)")
+      .select("id, supervisee_id, session_date, session_time, duration_min, summary, payment_received, invoice_issued, meeting_url, supervisees!supervisee_id(id, full_name, requires_payment)")
       .gte("session_date", startDate)
       .lte("session_date", endDate);
     setData((rows ?? []) as CalendarSupervisionSession[]);

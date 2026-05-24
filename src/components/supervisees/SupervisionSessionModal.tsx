@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Upload, Paperclip } from "lucide-react";
+import { X, Upload, Paperclip, Link } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../../lib/supabase";
 import { FileItem } from "../files/FileItem";
+import { YesNoToggle } from "../common/YesNoToggle";
 import type { SupervisionSession, SupervisionFile } from "../../types";
 
 interface Props {
   superviseeId: string;
+  requiresPayment?: boolean;
   session?: SupervisionSession;
   onClose: () => void;
   onSaved: () => void;
@@ -13,14 +15,17 @@ interface Props {
 
 interface PendingFile { id: string; file: File; }
 
-export function SupervisionSessionModal({ superviseeId, session, onClose, onSaved }: Props) {
+export function SupervisionSessionModal({ superviseeId, requiresPayment = false, session, onClose, onSaved }: Props) {
   const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
     session_date: session?.session_date ?? today,
     session_time: session?.session_time ?? "",
     duration_min: session?.duration_min?.toString() ?? "",
     summary: session?.summary ?? "",
+    meeting_url: session?.meeting_url ?? "",
   });
+  const [paymentReceived, setPaymentReceived] = useState<boolean | null>(session?.payment_received ?? null);
+  const [invoiceIssued, setInvoiceIssued]     = useState<boolean | null>(session?.invoice_issued ?? null);
   const [existingFiles, setExistingFiles] = useState<SupervisionFile[]>([]);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
@@ -65,6 +70,8 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
       session_time: form.session_time || null,
       duration_min: form.duration_min ? parseInt(form.duration_min) : null,
       summary: form.summary.trim() || null,
+      meeting_url: form.meeting_url.trim() || null,
+      ...(requiresPayment ? { payment_received: paymentReceived, invoice_issued: invoiceIssued } : {}),
     };
     let sessionId = session?.id;
     if (session) {
@@ -101,6 +108,42 @@ export function SupervisionSessionModal({ superviseeId, session, onClose, onSave
             <label className="label-base">משך ההדרכה (דקות)</label>
             <input type="number" value={form.duration_min} onChange={(e) => setForm({ ...form, duration_min: e.target.value })} className="input-base" placeholder="60" min="1" max="480" />
           </div>
+
+          {/* Meeting URL */}
+          <div>
+            <label className="label-base flex items-center gap-1.5">
+              <Link className="w-3.5 h-3.5 text-gray-400" />
+              קישור לפגישה אונליין
+            </label>
+            <input
+              type="url"
+              value={form.meeting_url}
+              onChange={(e) => setForm({ ...form, meeting_url: e.target.value })}
+              className="input-base"
+              placeholder="https://zoom.us/j/..."
+              dir="ltr"
+            />
+            {session?.meeting_url && (
+              <a href={session.meeting_url} target="_blank" rel="noopener noreferrer"
+                className="mt-1 flex items-center gap-1 text-xs text-sky-600 hover:underline">
+                <Link className="w-3 h-3" />הצטרפות לפגישה
+              </a>
+            )}
+          </div>
+
+          {/* Payment */}
+          {requiresPayment && (
+            <div className="space-y-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">האם התקבל תשלום?</label>
+                <YesNoToggle value={paymentReceived} onChange={setPaymentReceived} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">האם הופקה חשבונית?</label>
+                <YesNoToggle value={invoiceIssued} onChange={setInvoiceIssued} />
+              </div>
+            </div>
+          )}
 
           {/* Summary */}
           <div>

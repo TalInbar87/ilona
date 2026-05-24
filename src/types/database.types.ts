@@ -158,6 +158,7 @@ export type Database = {
           phone: string | null;
           email: string | null;
           notes: string | null;
+          requires_payment: boolean;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -168,6 +169,7 @@ export type Database = {
           phone?: string | null;
           email?: string | null;
           notes?: string | null;
+          requires_payment?: boolean;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -177,6 +179,7 @@ export type Database = {
           phone?: string | null;
           email?: string | null;
           notes?: string | null;
+          requires_payment?: boolean;
           updated_at?: string;
         };
         Relationships: [];
@@ -190,6 +193,9 @@ export type Database = {
           duration_min: number | null;
           goals: string | null;
           summary: string | null;
+          payment_received: boolean | null;
+          invoice_issued: boolean | null;
+          meeting_url: string | null;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -202,6 +208,9 @@ export type Database = {
           duration_min?: number | null;
           goals?: string | null;
           summary?: string | null;
+          payment_received?: boolean | null;
+          invoice_issued?: boolean | null;
+          meeting_url?: string | null;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -212,6 +221,9 @@ export type Database = {
           duration_min?: number | null;
           goals?: string | null;
           summary?: string | null;
+          payment_received?: boolean | null;
+          invoice_issued?: boolean | null;
+          meeting_url?: string | null;
           updated_at?: string;
         };
         Relationships: [

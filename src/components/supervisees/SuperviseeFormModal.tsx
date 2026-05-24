@@ -15,6 +15,7 @@ export function SuperviseeFormModal({ supervisee, onClose, onSaved }: Props) {
     phone: supervisee?.phone ?? "",
     email: supervisee?.email ?? "",
     notes: supervisee?.notes ?? "",
+    requires_payment: supervisee?.requires_payment ?? false,
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -28,6 +29,7 @@ export function SuperviseeFormModal({ supervisee, onClose, onSaved }: Props) {
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
       notes: form.notes.trim() || null,
+      requires_payment: form.requires_payment,
     };
     const { error: err } = supervisee
       ? await supabase.from("supervisees").update(payload).eq("id", supervisee.id)
@@ -66,6 +68,16 @@ export function SuperviseeFormModal({ supervisee, onClose, onSaved }: Props) {
             <label className="label-base">הערות</label>
             <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="input-base resize-none" rows={3} placeholder="הערות נוספות..." />
           </div>
+          <label className="flex items-center gap-3 cursor-pointer select-none p-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.requires_payment}
+              onChange={(e) => setForm({ ...form, requires_payment: e.target.checked })}
+              className="w-4 h-4 rounded accent-violet-600"
+            />
+            <span className="text-sm font-medium text-gray-700">מודרכת נדרשת לתשלום</span>
+          </label>
+
           <div className="flex gap-3 pt-1">
             <button type="submit" disabled={saving} className="btn-primary flex-1 disabled:opacity-60">
               {saving ? "שומר..." : "שמירה"}

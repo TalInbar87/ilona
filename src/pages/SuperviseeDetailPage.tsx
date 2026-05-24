@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, GraduationCap, Phone, Mail, Plus, Pencil, ClipboardList, ChevronLeft, Upload } from "lucide-react";
+import { ArrowRight, GraduationCap, Phone, Mail, Plus, Pencil, ClipboardList, ChevronLeft, Upload, CreditCard } from "lucide-react";
 import { supabase, STORAGE_BUCKETS } from "../lib/supabase";
 import { useSupervisees } from "../hooks/useSupervisees";
 import { useSupervisionSessions, useSupervisionSession } from "../hooks/useSupervisionSessions";
@@ -55,6 +55,12 @@ export function SuperviseeDetailPage() {
               <span className="font-semibold text-sm">{sessions.length}</span>
               <span className="text-xs">מפגשים</span>
             </div>
+            {supervisee?.requires_payment && (
+              <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1.5 rounded-xl border border-amber-200">
+                <CreditCard className="w-4 h-4" />
+                <span className="text-xs font-medium hidden sm:inline">נדרש תשלום</span>
+              </div>
+            )}
             <button onClick={() => setShowEdit(true)} className="btn-secondary flex items-center gap-1.5 py-1.5 px-2.5 md:px-3 text-sm">
               <Pencil className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">עריכה</span>
@@ -88,6 +94,7 @@ export function SuperviseeDetailPage() {
                 session={s}
                 expanded={expandedId === s.id}
                 superviseeId={superviseeId}
+                requiresPayment={supervisee?.requires_payment ?? false}
                 onToggle={() => setExpandedId(expandedId === s.id ? null : s.id)}
                 onEdit={() => { setEditSession(s); }}
                 onRefetch={refetchSessions}
@@ -108,6 +115,7 @@ export function SuperviseeDetailPage() {
       {(showSessionForm || editSession) && (
         <SupervisionSessionModal
           superviseeId={superviseeId}
+          requiresPayment={supervisee?.requires_payment ?? false}
           session={editSession ?? undefined}
           onClose={() => { setShowSessionForm(false); setEditSession(null); }}
           onSaved={() => { setShowSessionForm(false); setEditSession(null); refetchSessions(); }}
@@ -118,10 +126,11 @@ export function SuperviseeDetailPage() {
 }
 
 // ── Session row (expandable) ──────────────────
-function SessionRow({ session, expanded, superviseeId, onToggle, onEdit }: {
+function SessionRow({ session, expanded, superviseeId, requiresPayment, onToggle, onEdit }: {
   session: SupervisionSession;
   expanded: boolean;
   superviseeId: string;
+  requiresPayment: boolean;
   onToggle: () => void;
   onEdit: () => void;
   onRefetch: () => void;
@@ -153,7 +162,15 @@ function SessionRow({ session, expanded, superviseeId, onToggle, onEdit }: {
           <ClipboardList className="w-4 h-4 text-violet-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900">{formatDate(session.session_date)}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-medium text-gray-900">{formatDate(session.session_date)}</p>
+            {requiresPayment && session.payment_received === false && (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-red-100 text-red-600">טרם שולם</span>
+            )}
+            {session.payment_received === true && session.invoice_issued === false && (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700">טרם הופקה חשבונית</span>
+            )}
+          </div>
           {session.summary && <p className="text-xs text-gray-500 truncate">{session.summary}</p>}
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-400">
