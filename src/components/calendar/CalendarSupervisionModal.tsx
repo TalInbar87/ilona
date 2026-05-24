@@ -39,8 +39,8 @@ export function CalendarSupervisionModal({ initialStart, initialEnd, session, re
     summary: session?.summary ?? "",
     meeting_url: session?.meeting_url ?? "",
   });
-  const [paymentReceived, setPaymentReceived] = useState<boolean | null>(session?.payment_received ?? null);
-  const [invoiceIssued, setInvoiceIssued]     = useState<boolean | null>(session?.invoice_issued ?? null);
+  const [paymentReceived, setPaymentReceived] = useState<boolean | null>(session?.payment_received ?? false);
+  const [invoiceIssued, setInvoiceIssued]     = useState<boolean | null>(session?.invoice_issued ?? false);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

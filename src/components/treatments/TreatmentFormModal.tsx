@@ -97,8 +97,8 @@ export function TreatmentFormModal({ patientId, requiresPayment = false, treatme
     next_ideas: treatment?.next_ideas ?? "",
   });
 
-  const [paymentReceived, setPaymentReceived] = useState<boolean | null>(treatment?.payment_received ?? null);
-  const [invoiceIssued, setInvoiceIssued] = useState<boolean | null>(treatment?.invoice_issued ?? null);
+  const [paymentReceived, setPaymentReceived] = useState<boolean | null>(treatment?.payment_received ?? false);
+  const [invoiceIssued, setInvoiceIssued] = useState<boolean | null>(treatment?.invoice_issued ?? false);
 
   const [goals, setGoals] = useState<LocalGoal[]>([]);
 
