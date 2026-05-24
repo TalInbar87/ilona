@@ -587,6 +587,24 @@ export type Database = {
           }
         ];
       };
+      todos: {
+        Row: {
+          id: string;
+          text: string;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          text: string;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          text?: string;
+        };
+        Relationships: [];
+      };
       treatment_goals: {
         Row: {
           id: string;

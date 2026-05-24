@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Activity, Clock, Stethoscope, Users2, GraduationCap } from "lucide-react";
+import { Users, Activity, Clock, Stethoscope, Users2, GraduationCap, CheckSquare } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
 import { formatDate } from "../lib/utils";
@@ -9,6 +9,7 @@ import type { Appointment, Meeting } from "../types";
 import { AppointmentModal } from "../components/calendar/AppointmentModal";
 import { MeetingModal } from "../components/calendar/MeetingModal";
 import { CalendarView } from "../components/calendar/CalendarView";
+import { TodoList } from "../components/todos/TodoList";
 
 // ── Daily schedule helpers ────────────────────────────────────────────────────
 type DayItem =
@@ -140,83 +141,105 @@ export function DashboardPage() {
         )}
       </div>
 
-      {/* Daily planning */}
-      <div className="card p-5 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-sky-600" />
-            תכנון יומי — {todayLabel}
-          </h2>
-          <button
-            onClick={() => navigate("/calendar")}
-            className="text-xs text-sky-600 hover:text-sky-700"
-          >
-            לוח שנה מלא ←
-          </button>
+      {/* Daily planning + Todos — side by side */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+
+        {/* Today's schedule — 50% */}
+        <div className="card p-5 flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-sky-600" />
+              תכנון יומי — {todayLabel}
+            </h2>
+            <button
+              onClick={() => navigate("/calendar")}
+              className="text-xs text-sky-600 hover:text-sky-700"
+            >
+              לוח שנה מלא ←
+            </button>
+          </div>
+
+          {todayLoading ? (
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : todayItems.length === 0 ? (
+            <div className="text-center py-6 text-gray-400">
+              <Clock className="w-8 h-8 mx-auto mb-2 text-gray-200" />
+              <p className="text-sm">אין טיפולים או פגישות מתוכננים להיום</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {todayItems.map((item) =>
+                item.kind === "appointment" ? (
+                  <div
+                    key={`appt-${item.data.id}`}
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-sky-50 cursor-pointer transition-colors group"
+                    onClick={() => setEditAppointment(item.data)}
+                  >
+                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
+                      <Stethoscope className="w-4 h-4 text-sky-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {(item.data as AppointmentWithPatient).patients?.full_name ?? "—"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(item.data.start_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                        {" – "}
+                        {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    {item.data.status === "completed" ? (
+                      <span className="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 shrink-0">בוצע</span>
+                    ) : (
+                      <span className="text-xs text-gray-300 group-hover:text-sky-400 transition-colors shrink-0">עריכה</span>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    key={`meet-${item.data.id}`}
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-violet-50 cursor-pointer transition-colors group"
+                    onClick={() => setEditMeeting(item.data)}
+                  >
+                    <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
+                      <Users2 className="w-4 h-4 text-violet-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{item.data.title}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(item.data.start_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                        {" – "}
+                        {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    <span className="text-xs text-gray-300 group-hover:text-violet-400 transition-colors shrink-0">עריכה</span>
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </div>
 
-        {todayLoading ? (
-          <div className="space-y-2">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
-            ))}
+        {/* Todos widget — 50% */}
+        <div className="card p-5 flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-sky-600" />
+              משימות
+            </h2>
+            <button
+              onClick={() => navigate("/todos")}
+              className="text-xs text-sky-600 hover:text-sky-700"
+            >
+              כל המשימות ←
+            </button>
           </div>
-        ) : todayItems.length === 0 ? (
-          <div className="text-center py-6 text-gray-400">
-            <Clock className="w-8 h-8 mx-auto mb-2 text-gray-200" />
-            <p className="text-sm">אין טיפולים או פגישות מתוכננים להיום</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {todayItems.map((item) =>
-              item.kind === "appointment" ? (
-                <div
-                  key={`appt-${item.data.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-sky-50 cursor-pointer transition-colors group"
-                  onClick={() => setEditAppointment(item.data)}
-                >
-                  <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Stethoscope className="w-4 h-4 text-sky-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
-                      {(item.data as AppointmentWithPatient).patients?.full_name ?? "—"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(item.data.start_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
-                      {" – "}
-                      {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  {item.data.status === "completed" ? (
-                    <span className="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 shrink-0">בוצע</span>
-                  ) : (
-                    <span className="text-xs text-gray-300 group-hover:text-sky-400 transition-colors shrink-0">עריכה</span>
-                  )}
-                </div>
-              ) : (
-                <div
-                  key={`meet-${item.data.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-violet-50 cursor-pointer transition-colors group"
-                  onClick={() => setEditMeeting(item.data)}
-                >
-                  <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Users2 className="w-4 h-4 text-violet-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{item.data.title}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(item.data.start_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
-                      {" – "}
-                      {new Date(item.data.end_time).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  <span className="text-xs text-gray-300 group-hover:text-violet-400 transition-colors shrink-0">עריכה</span>
-                </div>
-              )
-            )}
-          </div>
-        )}
+          <TodoList compact />
+        </div>
+
       </div>
 
       {/* Edit modals for today's items */}

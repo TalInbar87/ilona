@@ -12,6 +12,7 @@ import { SuperviseesPage } from "./pages/SuperviseesPage";
 import { SuperviseeDetailPage } from "./pages/SuperviseeDetailPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { GoalsBankPage } from "./pages/GoalsBankPage";
+import { TodosPage } from "./pages/TodosPage";
 import { UsersPage } from "./pages/UsersPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="supervisees/:superviseeId" element={<SuperviseeDetailPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="goals-bank" element={<GoalsBankPage />} />
+          <Route path="todos" element={<TodosPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
