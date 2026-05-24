@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background: sky-600 rounded square (iOS-style rounding) -->
+  <rect width="512" height="512" rx="110" fill="#0284c7"/>
+
+  <!-- Left earpiece -->
+  <ellipse cx="155" cy="108" rx="19" ry="24" fill="white" transform="rotate(-18 155 108)"/>
+  <!-- Right earpiece -->
+  <ellipse cx="357" cy="108" rx="19" ry="24" fill="white" transform="rotate(18 357 108)"/>
+
+  <!-- Left tube arc to junction -->
+  <path d="M155 130 Q155 230 256 252"
+        stroke="white" stroke-width="32" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Right tube arc to junction -->
+  <path d="M357 130 Q357 230 256 252"
+        stroke="white" stroke-width="32" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Vertical tube down -->
+  <path d="M256 252 L256 358"
+        stroke="white" stroke-width="32" fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Diaphragm outer ring -->
+  <circle cx="256" cy="408" r="62" fill="none" stroke="white" stroke-width="30"/>
+  <!-- Diaphragm inner dot -->
+  <circle cx="256" cy="408" r="24" fill="white"/>
+</svg>
