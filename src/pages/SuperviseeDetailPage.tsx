@@ -167,7 +167,7 @@ function SessionRow({ session, expanded, superviseeId, requiresPayment, onToggle
             {requiresPayment && session.payment_received === false && (
               <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-red-100 text-red-600">טרם שולם</span>
             )}
-            {session.payment_received === true && session.invoice_issued === false && (
+            {requiresPayment && session.invoice_issued === false && (
               <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700">טרם הופקה חשבונית</span>
             )}
           </div>
