@@ -130,6 +130,10 @@ payment_received (bool|null), invoice_issued (bool|null), meeting_url (text|null
 ```
 `null` = סשן ישן שלא עוקב — אין אזהרה. `false` = הוגדר במפורש.
 
+### `todos`
+`id, text (not null), created_at, created_by (FK auth.users, DEFAULT auth.uid())`
+RLS: כל משתמש רואה רק את המשימות שלו. אין עמודת `done` — סימון → אישור → מחיקה מ-DB.
+
 ### `supervision_files`
 `id, session_id, supervisee_id, file_name, storage_path, mime_type, file_size, uploaded_by`
 
@@ -181,8 +185,9 @@ payment_received (bool|null), invoice_issued (bool|null), meeting_url (text|null
 | **v22** | `hearing_test_id` ל-patient_files — קבצים לבדיקות שמיעה ✅ הורץ |
 | **v23** | `patients.requires_payment` + `treatments.payment_received` + `treatments.invoice_issued` |
 | **v24** | `meetings.meeting_url` — קישור לפגישה אונליין (קיים ב-DB, לא בשימוש ב-UI) |
-| **v25** | rebuild `patients_with_stats` VIEW — לאחר הוספת `requires_payment` לטבלה |
-| **v26** | `supervisees.requires_payment` + `supervision_sessions.payment_received/invoice_issued/meeting_url` |
+| **v25** | rebuild `patients_with_stats` VIEW — לאחר הוספת `requires_payment` לטבלה ✅ הורץ |
+| **v26** | `supervisees.requires_payment` + `supervision_sessions.payment_received/invoice_issued/meeting_url` ✅ הורץ |
+| **v27** | טבלת `todos` עם RLS + GRANT + DEFAULT auth.uid() ✅ הורץ |
 
 ---
 
@@ -322,6 +327,7 @@ if (session) {
 | `useSupervisionSessions(id)` | superviseeId | `{ data, loading, refetch }` |
 | `useSupervisionSession(id)` | sessionId (optional) | `{ files, refetch }` — קבצים לסשן בודד |
 | `useCalendarSupervisionSessions(start, end)` | range strings | `{ data: CalendarSupervisionSession[], refetch }` |
+| `useTodos()` | — | `{ data: Todo[], loading, refetch, addTodo, deleteTodo }` |
 
 ---
 
@@ -341,6 +347,7 @@ if (session) {
 | `GoalsBankPage` | בנק מטרות + bulk category assignment |
 | `FileItem` | הצגת קובץ + מחיקה מ-storage |
 | `YesNoToggle` | `src/components/common/YesNoToggle.tsx` — toggle כן/לא עם nullable boolean |
+| `TodoList` | `src/components/todos/TodoList.tsx` — add + list + inline confirm → delete. prop: `compact?` |
 
 ---
 
@@ -421,6 +428,23 @@ Zustand store — state מרכזי לאימות.
 30 דק' ללא פעילות → showWarning=true → ספירה 60→0 → signOut() + navigate("/login")
 פעילות / לחיצת "המשך" → reset timer → showWarning=false
 ```
+
+## PWA — התקנה כאפליקציה
+
+**פלאגין:** `vite-plugin-pwa` (generateSW mode, Workbox)
+
+**קבצים:**
+- `public/icon.svg` — אייקון סטטוסקופ לבן על רקע sky-600
+- `vite.config.ts` — הגדרות manifest + workbox caching
+- `index.html` — apple-mobile-web-app meta tags
+
+**התקנה:**
+- iOS: Safari → שתף ⬆️ → "הוסף למסך הבית"
+- Android: Chrome → תפריט ⋮ → "הוסף למסך הבית"
+
+**אחרי הוספה:** נפתח ב-fullscreen ללא סרגל דפדפן, עם אייקון על מסך הבית.
+
+> ⚠️ אם מוסיפים עמודה ל-`patients` — חייבים לעשות DROP+CREATE לview `patients_with_stats` (p.* מצולם בזמן יצירה).
 
 ## FinBot API (עתידי)
 

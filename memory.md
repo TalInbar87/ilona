@@ -4,6 +4,51 @@
 
 ---
 
+## 2026-05-24 (המשך — סוף סשן)
+
+### תיקונים + פיצ'רים נוספים
+
+**תיקון toggle ברירת מחדל:**
+- `payment_received` ו-`invoice_issued` מתחילים ב-`false` (לא `null`) לרשומות חדשות
+- הבאג: השינוי לא הועלה ב-commit הקודם — תוקן ונשלח בנפרד
+
+**שני badges במקום אחד:**
+- `TreatmentsTab`: `showNoInvoice` עצמאי — מוצג גם כשגם תשלום וגם חשבונית חסרים
+- `SuperviseeDetailPage`: אותו תיקון
+
+**עריכת טיפול מדף הטיפול (TreatmentDetailPage):**
+- לא העביר `requiresPayment` ל-`TreatmentFormModal` → section תשלום היה מוסתר
+- תוקן: מוסיף `usePatient(patientId)` ומעביר `requiresPayment={patient?.requires_payment ?? false}`
+
+**auto-open טיפול מלוח שנה (תיקון כפול):**
+- בעיה א׳: `location.state` נוקה לפני שהמטופל נטען → `autoOpenTreatment` היה `false` בעת רנדור TreatmentsTab
+  - תיקון: `[autoOpenTreatment] = useState(...)` — ערכים נשמרים גם אחרי ניקוי state
+- בעיה ב׳: אחרי שמירת טיפול → refetch → loading → TreatmentsTab remount עם `autoOpen=true` → פורם נפתח שוב
+  - תיקון: `onTreatmentCountChange` מאפס `setAutoOpenTreatment(false)` לפני ה-refetch
+
+**to-do list (migration-v27 ✅ הורץ):**
+- טבלת `todos` עם RLS per user + `GRANT` נוסף + `DEFAULT auth.uid()`
+- `useTodos` hook: fetch, addTodo, deleteTodo
+- `TodoList` קומפוננט: input + רשימה + inline confirm "האם בוצע?" → מחיקה מ-DB
+- `TodosPage` בנתיב `/todos`
+- AppShell: "משימות" עם CheckSquare icon
+- DashboardPage: תכנון יומי + משימות זה לצד זה (50/50, `flex-col md:flex-row`)
+- תיקון מובייל: שורת אישור עברה לשתי שורות
+
+**PWA — התקנה כאפליקציה:**
+- `vite-plugin-pwa` עם `generateSW` (Workbox)
+- `public/icon.svg` — סטטוסקופ לבן על רקע sky-600
+- manifest: RTL, standalone, theme_color, short_name "קלינאות"
+- `index.html`: apple-mobile-web-app meta tags לאייפון
+- התקנה: Safari → שתף → "הוסף למסך הבית"
+
+**כלל מובייל ב-learning.md:**
+- נוסף סקשן "כלל מובייל — חובה" עם טבלת בדיקות ודגלים אדומים
+
+**מיגרציות — הכל הורץ ✅:** v23, v24, v25, v26, v27
+
+---
+
 ## 2026-05-24
 
 ### תשלום הדרכות + תיקון VIEW + YesNoToggle משותף
@@ -239,5 +284,5 @@
 
 - **הורץ בסופאבייס (2026-05-03):** v19 ✅, v21 ✅ — טבלת `treatment_goals` קיימת ומאוכלסת
 - **הורץ בסופאבייס (2026-05-13):** v22 ✅ — `hearing_test_id` ל-`patient_files`
-- **ממתין להרצה:** v23 (patients.requires_payment + treatments payment), v24 (meetings.meeting_url — אופציונלי, לא בשימוש), v25 (rebuild patients_with_stats VIEW — קריטי!), v26 (supervision payment + meeting_url)
+- **הורץ בסופאבייס (2026-05-24):** v23 ✅, v25 ✅, v26 ✅, v27 ✅ — כל המיגרציות עד כה הורצו
 - **FinBot API** — נבחן אפשרות חיבור (API key בהגדרות עסק, endpoint: `POST https://api.finbotai.co.il/income`) — לא יושם עדיין
