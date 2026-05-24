@@ -51,17 +51,16 @@ export function CalendarSupervisionModal({ initialStart, initialEnd, session, on
     e.preventDefault();
     if (!form.supervisee_id) { setError("נא לבחור מודרכת"); return; }
     setSaving(true);
-    const payload = {
-      supervisee_id: form.supervisee_id,
+    const basePayload = {
       session_date: form.session_date,
       session_time: form.session_time || null,
       duration_min: form.duration_min ? parseInt(form.duration_min) : null,
       summary: form.summary.trim() || null,
     };
     if (session) {
-      await supabase.from("supervision_sessions").update(payload).eq("id", session.id);
+      await supabase.from("supervision_sessions").update(basePayload).eq("id", session.id);
     } else {
-      await supabase.from("supervision_sessions").insert(payload);
+      await supabase.from("supervision_sessions").insert({ ...basePayload, supervisee_id: form.supervisee_id });
     }
     setSaving(false);
     onSaved();
