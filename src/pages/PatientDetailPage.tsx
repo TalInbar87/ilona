@@ -11,6 +11,7 @@ import {
   Activity,
   Archive,
   ArchiveRestore,
+  CreditCard,
 } from "lucide-react";
 import { usePatient } from "../hooks/usePatient";
 import { calcAgeLabel, formatDate } from "../lib/utils";
@@ -155,6 +156,12 @@ export function PatientDetailPage() {
               <span className="font-semibold text-sm">{patient.treatment_count}</span>
               <span className="text-xs">טיפולים</span>
             </div>
+            {patient.requires_payment && (
+              <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1.5 rounded-xl border border-amber-200">
+                <CreditCard className="w-4 h-4" />
+                <span className="text-xs font-medium hidden sm:inline">נדרש תשלום</span>
+              </div>
+            )}
             <button
               onClick={handleArchiveToggle}
               disabled={archiving}
