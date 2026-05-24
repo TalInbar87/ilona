@@ -74,26 +74,30 @@ export function TodoList({ compact = false }: Props) {
           {todos.map((todo) => (
             <div key={todo.id}>
               {confirmId === todo.id ? (
-                /* Confirmation row */
-                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                  <CheckSquare className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span className="flex-1 text-sm text-amber-800 truncate">{todo.text}</span>
-                  <span className="text-xs text-amber-700 font-medium shrink-0">האם בוצע?</span>
-                  <button
-                    onClick={() => handleConfirmDone(todo.id)}
-                    disabled={deletingId === todo.id}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 disabled:opacity-50 transition-colors shrink-0"
-                  >
-                    <Check className="w-3 h-3" />
-                    כן
-                  </button>
-                  <button
-                    onClick={() => setConfirmId(null)}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-white text-gray-600 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors shrink-0"
-                  >
-                    <X className="w-3 h-3" />
-                    לא
-                  </button>
+                /* Confirmation row — two lines on mobile */
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckSquare className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span className="flex-1 text-sm text-amber-800 truncate">{todo.text}</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-end">
+                    <span className="text-xs text-amber-700 font-medium flex-1">האם בוצע?</span>
+                    <button
+                      onClick={() => handleConfirmDone(todo.id)}
+                      disabled={deletingId === todo.id}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 disabled:opacity-50 transition-colors active:scale-95"
+                    >
+                      <Check className="w-3 h-3" />
+                      כן
+                    </button>
+                    <button
+                      onClick={() => setConfirmId(null)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-white text-gray-600 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors active:scale-95"
+                    >
+                      <X className="w-3 h-3" />
+                      לא
+                    </button>
+                  </div>
                 </div>
               ) : (
                 /* Normal row */
