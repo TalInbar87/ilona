@@ -34,8 +34,8 @@ export function PatientDetailPage() {
   // Support auto-open treatment form from calendar (when appointment marked completed).
   // Captured into useState once so they survive the immediate location.state clear below.
   const locationState = location.state as { openNewTreatment?: boolean; prefill?: TreatmentPrefill } | null;
-  const [autoOpenTreatment] = useState(!!locationState?.openNewTreatment);
-  const [treatmentPrefill] = useState(locationState?.prefill);
+  const [autoOpenTreatment, setAutoOpenTreatment] = useState(!!locationState?.openNewTreatment);
+  const [treatmentPrefill, setTreatmentPrefill] = useState(locationState?.prefill);
 
   const { data: patient, loading, error, refetch } = usePatient(patientId);
   const [activeTab, setActiveTab] = useState<Tab>(autoOpenTreatment ? "treatments" : "details");
@@ -232,7 +232,7 @@ export function PatientDetailPage() {
               patientId={patient.id}
               patientName={patient.full_name}
               requiresPayment={patient.requires_payment ?? false}
-              onTreatmentCountChange={refetch}
+              onTreatmentCountChange={() => { setAutoOpenTreatment(false); setTreatmentPrefill(undefined); refetch(); }}
               autoOpen={autoOpenTreatment}
               prefill={treatmentPrefill}
             />
