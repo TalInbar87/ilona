@@ -127,7 +127,7 @@ function TreatmentRow({
 }) {
   // Only show payment warnings for treatments where the field was explicitly set (not null = old treatment)
   const showUnpaid = requiresPayment && treatment.payment_received === false;
-  const showNoInvoice = treatment.payment_received === true && treatment.invoice_issued === false;
+  const showNoInvoice = requiresPayment && treatment.invoice_issued === false;
 
   return (
     <div

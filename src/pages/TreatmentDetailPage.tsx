@@ -13,6 +13,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useTreatment } from "../hooks/useTreatment";
+import { usePatient } from "../hooks/usePatient";
 import { formatDate, formatDateTime } from "../lib/utils";
 import { FileItem } from "../components/files/FileItem";
 import { TreatmentFormModal } from "../components/treatments/TreatmentFormModal";
@@ -22,6 +23,7 @@ export function TreatmentDetailPage() {
   const { patientId, treatmentId } = useParams<{ patientId: string; treatmentId: string }>();
   const navigate = useNavigate();
   const { treatment, files, loading, refetch } = useTreatment(treatmentId);
+  const { data: patient } = usePatient(patientId);
   const [showEdit, setShowEdit] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -232,6 +234,7 @@ export function TreatmentDetailPage() {
         <TreatmentFormModal
           patientId={patientId!}
           treatment={treatment}
+          requiresPayment={patient?.requires_payment ?? false}
           onClose={() => setShowEdit(false)}
           onSaved={() => { setShowEdit(false); refetch(); }}
         />
