@@ -64,9 +64,11 @@ src/
 ## טבלאות DB
 
 ### `patients`
-שדות עיקריים: `id, full_name, date_of_birth, id_number, phone, email, parent_name, notes, archived_at, created_by`
+שדות עיקריים: `id, full_name, date_of_birth, id_number, phone, email, parent_name, notes, archived_at, created_by, requires_payment (bool, default false)`
 
 **View:** `patients_with_stats` — מוסיף `age` (מחושב), `treatment_count`, `is_archived`
+
+> ⚠️ **PostgreSQL VIEW gotcha:** `SELECT p.*` בתוך VIEW מורחב בזמן יצירת ה-VIEW — הוספת עמודה חדשה לטבלה **לא** תופיע ב-VIEW אוטומטית. חייבים `DROP VIEW … CASCADE` ו-`CREATE VIEW` מחדש אחרי כל הוספת עמודה ל-`patients`.
 
 ### `diagnoses`
 `id, patient_id, title, description, goals (text), diagnosed_at, created_by`
@@ -113,16 +115,20 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 `series_id` — UUID משותף לכל הפגישות בסדרה. `series_index` מתחיל מ-1.
 
 ### `meetings`
-`id, title, start_time, end_time, created_by` — ישיבות (ללא מטופל)
+`id, title, start_time, end_time, meeting_url (text|null), created_by` — ישיבות (ללא מטופל)
 
 ### `hearing_tests`
 `id, patient_id, test_date, results, notes, created_at, created_by`
 
 ### `supervisees`
-`id, full_name, phone, email, notes, created_at, updated_at, created_by`
+`id, full_name, phone, email, notes, requires_payment (bool, default false), created_at, updated_at, created_by`
 
 ### `supervision_sessions`
-`id, supervisee_id, session_date, session_time, duration_min, goals, summary, created_by`
+```
+id, supervisee_id, session_date, session_time, duration_min, summary, created_by,
+payment_received (bool|null), invoice_issued (bool|null), meeting_url (text|null)
+```
+`null` = סשן ישן שלא עוקב — אין אזהרה. `false` = הוגדר במפורש.
 
 ### `supervision_files`
 `id, session_id, supervisee_id, file_name, storage_path, mime_type, file_size, uploaded_by`
@@ -174,7 +180,9 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 | **v21** | backfill treatment_goals לכל הטיפולים ✅ הורץ |
 | **v22** | `hearing_test_id` ל-patient_files — קבצים לבדיקות שמיעה ✅ הורץ |
 | **v23** | `patients.requires_payment` + `treatments.payment_received` + `treatments.invoice_issued` |
-| **v24** | `meetings.meeting_url` — קישור לפגישה אונליין |
+| **v24** | `meetings.meeting_url` — קישור לפגישה אונליין (קיים ב-DB, לא בשימוש ב-UI) |
+| **v25** | rebuild `patients_with_stats` VIEW — לאחר הוספת `requires_payment` לטבלה |
+| **v26** | `supervisees.requires_payment` + `supervision_sessions.payment_received/invoice_issued/meeting_url` |
 
 ---
 
@@ -222,16 +230,43 @@ supabase
   .in("treatment_id", ids)
 ```
 
-### 4. Supabase — אין Promise.all
+### 4. Nullable Boolean — מעקב תשלום
+
+שדות `payment_received` ו-`invoice_issued` הם `boolean | null`:
+
+| ערך | משמעות | אזהרה? |
+|-----|--------|--------|
+| `null` | רשומה ישנה שנוצרה לפני v23/v26 — לא עוקב | לא |
+| `false` | הוגדר במפורש: לא שולם / לא הופקה | **כן** — badge אדום/ענבר |
+| `true` | כן, שולם / הופקה | לא (או badge כשתשלום התקבל אך חשבונית עדיין לא) |
+
+**חשוב:** תנאי אזהרה תמיד `=== false`, **אף פעם לא** `!value` (כי `null` גם falsy).
+
+ברירת מחדל לרשומות **חדשות**: `false` (לא `null`).
+
+`YesNoToggle` מציג שני כפתורים ומאפשר toggle בין `true`/`false` (לא ניתן לחזור ל-`null` דרך ה-UI).
+
+### 5. Supabase — אין Promise.all
 שאילתות Supabase **לא** real Promises. להשתמש ב-`for...of await` ולא ב-`Promise.all`.
 
-### 5. פגישות חוזרות — series
+### 6. Supabase Update vs Insert types
+בעדכון (`update`) אין לכלול שדות שמוגדרים כ-`never` ב-Update type — לדוגמה, `supervisee_id` בטבלת `supervision_sessions`. להפריד payload:
+```typescript
+const basePayload = { /* שדות משותפים */ };
+if (session) {
+  await supabase.from("supervision_sessions").update(basePayload).eq("id", session.id);
+} else {
+  await supabase.from("supervision_sessions").insert({ ...basePayload, supervisee_id: form.supervisee_id });
+}
+```
+
+### 7. פגישות חוזרות — series
 - `series_id` = UUID זהה לכל הפגישות בסדרה
 - `series_total` = סה"כ פגישות, `series_index` = מספר סידורי (1-based)
 - **סימון בלוח:** `series_index === series_total` (אחרונה) או `series_index === series_total - 1` → class `series-ending` + גבול ענבר
 - CSS ב-`index.css`: `.fc .series-ending { border: 2px solid #f59e0b !important }`
 
-### 6. Print CSS
+### 8. Print CSS
 ```css
 @media print {
   body * { visibility: hidden; }
@@ -266,6 +301,8 @@ supabase
 | `useGoalsBank(...)` | filters | `{ data, loading, refetch }` |
 | `useSupervisees()` | — | `{ data, loading, refetch }` |
 | `useSupervisionSessions(id)` | superviseeId | `{ data, loading, refetch }` |
+| `useSupervisionSession(id)` | sessionId (optional) | `{ files, refetch }` — קבצים לסשן בודד |
+| `useCalendarSupervisionSessions(start, end)` | range strings | `{ data: CalendarSupervisionSession[], refetch }` |
 
 ---
 
@@ -280,9 +317,11 @@ supabase
 | `PatientFilesSection` | קבצים כלליים של מטופל (טאב פרטים אישיים) — ללא diagnosis/hearing_test |
 | `GoalPicker` | input + autocomplete מ-bank (בשימוש ב-TreatmentFormModal בלבד) |
 | `AppointmentModal` | multi-phase: form → checking → conflict → confirm |
-| `CalendarView` | FullCalendar + סימון series-ending |
+| `CalendarView` | FullCalendar + סימון series-ending + EventTypePicker (3 סוגי אירועים) |
+| `CalendarSupervisionModal` | יצירה/עריכה/מחיקה של הדרכה מלוח שנה + dropdown מודרכות + תשלום |
 | `GoalsBankPage` | בנק מטרות + bulk category assignment |
 | `FileItem` | הצגת קובץ + מחיקה מ-storage |
+| `YesNoToggle` | `src/components/common/YesNoToggle.tsx` — toggle כן/לא עם nullable boolean |
 
 ---
 

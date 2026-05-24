@@ -4,6 +4,48 @@
 
 ---
 
+## 2026-05-24
+
+### תשלום הדרכות + תיקון VIEW + YesNoToggle משותף
+
+**תיקון קריטי — `patients_with_stats` VIEW (migration-v25, צריך להריץ):**
+- PostgreSQL VIEW מרחיב `p.*` בזמן יצירה — הוספת עמודה לטבלה לא מעדכנת VIEW קיים
+- `requires_payment` לא הוחזר מ-`usePatient` כי VIEW לא ידע על העמודה
+- פתרון: DROP + CREATE מחדש של `patients_with_stats`
+
+**הדרכות — תשלום (migration-v26, צריך להריץ):**
+- `supervisees.requires_payment` (boolean, default false)
+- `supervision_sessions.payment_received` (boolean, nullable)
+- `supervision_sessions.invoice_issued` (boolean, nullable)
+- `supervision_sessions.meeting_url` (text, nullable) — קישור לפגישה אונליין
+
+**תיקון:** meeting_url עבר מ-`meetings` ל-`supervision_sessions` (v24 היה שגוי — המשתמשת התכוונה להדרכות, לא לפגישות)
+
+**YesNoToggle — קומפוננט משותף:**
+- `src/components/common/YesNoToggle.tsx`
+- Props: `value: boolean | null`, `onChange: (v: boolean) => void`
+- שני כפתורים: "כן" (ירוק) / "לא" (אדום)
+- בשימוש ב-`TreatmentFormModal`, `SupervisionSessionModal`, `CalendarSupervisionModal`
+
+**UI — הדרכות:**
+- `SuperviseeFormModal`: checkbox "מודרכת נדרשת לתשלום"
+- `SupervisionSessionModal`: שדה meeting_url + section תשלום (requiresPayment prop)
+- `CalendarSupervisionModal`: שדה meeting_url + section תשלום (requiresPayment prop)
+- `SuperviseeDetailPage`: badge "נדרש תשלום" (ענבר) בכרטיס header + badges "טרם שולם" / "טרם הופקה חשבונית" בשורות sessions
+
+**UI — מטופלים:**
+- `PatientDetailPage`: badge "נדרש תשלום" (ענבר) בכרטיס header
+
+**ברירת מחדל לתשלום:**
+- כל toggle של תשלום/חשבונית מתחיל ב-`false` (לא `null`) לרשומות חדשות
+- `null` שמור לרשומות ישנות — אין אזהרה
+
+**מיגרציות ממתינות להרצה בסופאבייס:**
+- `migration-v25.sql` — rebuild `patients_with_stats` VIEW
+- `migration-v26.sql` — supervision payment + meeting_url
+
+---
+
 ## 2026-05-13 (סשן נוכחי — המשך 2)
 
 ### לוח שנה — הדרכות + קישור אונליין לפגישות
@@ -196,4 +238,6 @@
 ## הערות כלליות
 
 - **הורץ בסופאבייס (2026-05-03):** v19 ✅, v21 ✅ — טבלת `treatment_goals` קיימת ומאוכלסת
+- **הורץ בסופאבייס (2026-05-13):** v22 ✅ — `hearing_test_id` ל-`patient_files`
+- **ממתין להרצה:** v23 (patients.requires_payment + treatments payment), v24 (meetings.meeting_url — אופציונלי, לא בשימוש), v25 (rebuild patients_with_stats VIEW — קריטי!), v26 (supervision payment + meeting_url)
 - **FinBot API** — נבחן אפשרות חיבור (API key בהגדרות עסק, endpoint: `POST https://api.finbotai.co.il/income`) — לא יושם עדיין
