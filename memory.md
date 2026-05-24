@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-05-13 (סשן נוכחי — המשך 2)
+
+### לוח שנה — הדרכות + קישור אונליין לפגישות
+
+**הדרכה בלוח שנה:**
+- אפשרות שלישית ב-EventTypePicker (אינדיגו, GraduationCap)
+- `useCalendarSupervisionSessions(start, end)` — hook חדש, טוען sessions עם שם מודרכת
+- `CalendarSupervisionModal` — modal חדש: dropdown מודרכות + תאריך/שעה/משך/סיכום; תומך צפייה + עריכה + מחיקה
+- אירועי הדרכה על הלוח: `{session_date}T{session_time}` + חישוב end מ-duration_min
+
+**קישור אונליין לפגישה (migration-v24, צריך להריץ):**
+- `meetings.meeting_url` (text, nullable)
+- `MeetingModal` — שדה URL אופציונלי + כפתור "הצטרפות לפגישה" בעת עריכה
+
+---
+
 ## 2026-05-13 (סשן נוכחי — המשך)
 
 ### תשלום + תיקוני תצוגה

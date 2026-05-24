@@ -174,6 +174,7 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 | **v21** | backfill treatment_goals לכל הטיפולים ✅ הורץ |
 | **v22** | `hearing_test_id` ל-patient_files — קבצים לבדיקות שמיעה ✅ הורץ |
 | **v23** | `patients.requires_payment` + `treatments.payment_received` + `treatments.invoice_issued` |
+| **v24** | `meetings.meeting_url` — קישור לפגישה אונליין |
 
 ---
 

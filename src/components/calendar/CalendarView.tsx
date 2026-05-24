@@ -6,11 +6,14 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import heLocale from "@fullcalendar/core/locales/he";
 import type { DateSelectArg, EventClickArg, EventInput } from "@fullcalendar/core";
-import { Plus, X, Stethoscope, Users } from "lucide-react";
+import { Plus, X, Stethoscope, Users, GraduationCap } from "lucide-react";
 import { useAppointments } from "../../hooks/useAppointments";
 import { useMeetings } from "../../hooks/useMeetings";
+import { useCalendarSupervisionSessions } from "../../hooks/useCalendarSupervisionSessions";
+import type { CalendarSupervisionSession } from "../../hooks/useCalendarSupervisionSessions";
 import { AppointmentModal } from "./AppointmentModal";
 import { MeetingModal } from "./MeetingModal";
+import { CalendarSupervisionModal } from "./CalendarSupervisionModal";
 import { ISRAELI_HOLIDAYS } from "../../lib/israeliHolidays";
 import type { Appointment, Meeting } from "../../types";
 
@@ -22,16 +25,19 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const MEETING_COLOR = "#8b5cf6";
+const SUPERVISION_COLOR = "#6366f1";
 
 type SlotInfo = { start: Date; end: Date };
 
 function EventTypePicker({
   onPickAppointment,
   onPickMeeting,
+  onPickSupervision,
   onClose,
 }: {
   onPickAppointment: () => void;
   onPickMeeting: () => void;
+  onPickSupervision: () => void;
   onClose: () => void;
 }) {
   return (
@@ -68,6 +74,18 @@ function EventTypePicker({
               <p className="text-xs text-gray-500">אירוע כללי בלוח השנה</p>
             </div>
           </button>
+          <button
+            onClick={onPickSupervision}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 transition-colors text-right"
+          >
+            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
+              <GraduationCap className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">הדרכה</p>
+              <p className="text-xs text-gray-500">מפגש עם מודרכת</p>
+            </div>
+          </button>
         </div>
       </div>
     </div>
@@ -96,8 +114,12 @@ export function CalendarView({
   const [meetingSlot, setMeetingSlot]         = useState<SlotInfo | null>(null);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
 
+  const { data: supervisionSessions, refetch: refetchSupervision } = useCalendarSupervisionSessions(range?.start, range?.end);
+  const [supervisionSlot, setSupervisionSlot]         = useState<SlotInfo | null>(null);
+  const [selectedSupervision, setSelectedSupervision] = useState<CalendarSupervisionSession | null>(null);
+
   const calendarRef = useRef<FullCalendar>(null);
-  const refetchAll = () => { refetchAppts(); refetchMeetings(); };
+  const refetchAll = () => { refetchAppts(); refetchMeetings(); refetchSupervision(); };
 
   const appointmentEvents: EventInput[] = appointments.map((a) => {
     const isLast = a.series_id != null && a.series_index === a.series_total;
@@ -127,7 +149,23 @@ export function CalendarView({
     extendedProps: { type: "meeting", meeting: m },
   }));
 
-  const events: EventInput[] = [...appointmentEvents, ...meetingEvents, ...ISRAELI_HOLIDAYS];
+  const supervisionEvents: EventInput[] = supervisionSessions.map((s) => {
+    const startISO = `${s.session_date}T${s.session_time ?? "00:00"}`;
+    const endISO = s.duration_min
+      ? new Date(new Date(startISO).getTime() + s.duration_min * 60000).toISOString()
+      : new Date(new Date(startISO).getTime() + 60 * 60000).toISOString();
+    return {
+      id: `sup-${s.id}`,
+      title: s.supervisees?.full_name ?? "הדרכה",
+      start: startISO,
+      end: endISO,
+      backgroundColor: SUPERVISION_COLOR,
+      borderColor: "transparent",
+      extendedProps: { type: "supervision", session: s },
+    };
+  });
+
+  const events: EventInput[] = [...appointmentEvents, ...meetingEvents, ...supervisionEvents, ...ISRAELI_HOLIDAYS];
 
   const handleDatesSet = (info: { startStr: string; endStr: string }) =>
     setRange({ start: info.startStr, end: info.endStr });
@@ -136,8 +174,9 @@ export function CalendarView({
     setPickerSlot({ start: info.start, end: info.end });
 
   const handleEventClick = (info: EventClickArg) => {
-    const { type, appointment, meeting } = info.event.extendedProps;
+    const { type, appointment, meeting, session } = info.event.extendedProps;
     if (type === "meeting") setSelectedMeeting(meeting as Meeting);
+    else if (type === "supervision") setSelectedSupervision(session as CalendarSupervisionSession);
     else setSelectedAppointment(appointment as Appointment);
   };
 
@@ -195,6 +234,7 @@ export function CalendarView({
         <EventTypePicker
           onPickAppointment={() => { setSelectedSlot(pickerSlot); setPickerSlot(null); }}
           onPickMeeting={() => { setMeetingSlot(pickerSlot); setPickerSlot(null); }}
+          onPickSupervision={() => { setSupervisionSlot(pickerSlot); setPickerSlot(null); }}
           onClose={() => setPickerSlot(null)}
         />
       )}
@@ -220,6 +260,16 @@ export function CalendarView({
           meeting={selectedMeeting ?? undefined}
           onClose={() => { setMeetingSlot(null); setSelectedMeeting(null); }}
           onSaved={() => { setMeetingSlot(null); setSelectedMeeting(null); refetchAll(); }}
+        />
+      )}
+
+      {(supervisionSlot || selectedSupervision) && (
+        <CalendarSupervisionModal
+          initialStart={supervisionSlot?.start}
+          initialEnd={supervisionSlot?.end}
+          session={selectedSupervision ?? undefined}
+          onClose={() => { setSupervisionSlot(null); setSelectedSupervision(null); }}
+          onSaved={() => { setSupervisionSlot(null); setSelectedSupervision(null); refetchAll(); }}
         />
       )}
     </>
