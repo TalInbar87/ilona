@@ -20,6 +20,7 @@ export type Database = {
           parent_name: string | null;
           notes: string | null;
           archived_at: string | null;
+          requires_payment: boolean;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -34,6 +35,7 @@ export type Database = {
           parent_name?: string | null;
           notes?: string | null;
           archived_at?: string | null;
+          requires_payment?: boolean;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -48,6 +50,7 @@ export type Database = {
           parent_name?: string | null;
           notes?: string | null;
           archived_at?: string | null;
+          requires_payment?: boolean;
           updated_at?: string;
           created_by?: string | null;
         };
@@ -354,6 +357,8 @@ export type Database = {
           tools: string | null;
           next_ideas: string | null;
           duration_min: number | null;
+          payment_received: boolean | null;
+          invoice_issued: boolean | null;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -368,6 +373,8 @@ export type Database = {
           tools?: string | null;
           next_ideas?: string | null;
           duration_min?: number | null;
+          payment_received?: boolean | null;
+          invoice_issued?: boolean | null;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -382,6 +389,8 @@ export type Database = {
           tools?: string | null;
           next_ideas?: string | null;
           duration_min?: number | null;
+          payment_received?: boolean | null;
+          invoice_issued?: boolean | null;
           updated_at?: string;
           created_by?: string | null;
         };
@@ -610,6 +619,7 @@ export type Database = {
           parent_name: string | null;
           notes: string | null;
           archived_at: string | null;
+          requires_payment: boolean;
           is_archived: boolean;
           created_at: string;
           updated_at: string;

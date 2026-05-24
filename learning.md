@@ -90,8 +90,10 @@ FK: goal_id      → patient_goals(id) ON DELETE CASCADE
 ### `treatments`
 ```
 id, patient_id, session_date, session_time, duration_min,
-notes, tools, next_ideas, summary (לגאסי), created_at, updated_at, created_by
+notes, tools, next_ideas, summary (לגאסי), created_at, updated_at, created_by,
+payment_received (bool|null), invoice_issued (bool|null)
 ```
+`null` = טיפול ישן שנוצר לפני v23 — לא מציגים אזהרה. `false` = הוגדר במפורש.
 
 ### `treatment_files`
 `id, treatment_id, patient_id, file_name, storage_path, mime_type, file_size, uploaded_at, uploaded_by`
@@ -171,6 +173,7 @@ status: "scheduled" | "completed" | "cancelled" | "no_show"
 | v20 | backfill treatment_goals לטיפול האחרון בלבד (מיותר, v21 מחליפו) |
 | **v21** | backfill treatment_goals לכל הטיפולים ✅ הורץ |
 | **v22** | `hearing_test_id` ל-patient_files — קבצים לבדיקות שמיעה ✅ הורץ |
+| **v23** | `patients.requires_payment` + `treatments.payment_received` + `treatments.invoice_issued` |
 
 ---
 

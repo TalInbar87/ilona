@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-05-13 (סשן נוכחי — המשך)
+
+### תשלום + תיקוני תצוגה
+
+**תשלום (migration-v23, צריך להריץ בסופאבייס):**
+- `patients.requires_payment` (boolean, default false) — מטופל נדרש לתשלום
+- `treatments.payment_received` (boolean, nullable) — האם התקבל תשלום
+- `treatments.invoice_issued` (boolean, nullable) — האם הופקה חשבונית
+- `null` = טיפול ישן שלא מעקב — אין אזהרות
+
+**UI:**
+- `PatientFormModal` — checkbox "מטופל נדרש לתשלום"
+- `TreatmentFormModal` — `requiresPayment` prop; מציג section עם YesNoToggle לתשלום + חשבונית
+- `TreatmentRow` — badge אדום "טרם שולם" אם `payment_received === false`; badge צהוב "טרם הופקה חשבונית" אם `payment_received === true && invoice_issued === false`
+- אזהרות מוצגות רק כשהשדה הוגדר במפורש (לא null = טיפולים ישנים)
+
+**שינויים נוספים:**
+- AppShell: label "מודרכות" → "הדרכות"
+
+---
+
 ## 2026-05-13 (סשן נוכחי)
 
 ### קבצים בפרטים אישיים + תיקון מחיקת storage

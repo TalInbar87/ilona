@@ -19,6 +19,7 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
     email: patient?.email ?? "",
     parent_name: patient?.parent_name ?? "",
     notes: patient?.notes ?? "",
+    requires_payment: patient?.requires_payment ?? false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -49,6 +50,7 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
       email: form.email.trim() || null,
       parent_name: form.parent_name.trim() || null,
       notes: form.notes.trim() || null,
+      requires_payment: form.requires_payment,
     };
 
     const { error } = patient
@@ -174,6 +176,16 @@ export function PatientFormModal({ patient, onClose, onSaved }: Props) {
               placeholder="הערות נוספות..."
             />
           </div>
+
+          <label className="flex items-center gap-3 cursor-pointer select-none p-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.requires_payment}
+              onChange={(e) => setForm({ ...form, requires_payment: e.target.checked })}
+              className="w-4 h-4 rounded accent-sky-600"
+            />
+            <span className="text-sm font-medium text-gray-700">מטופל נדרש לתשלום</span>
+          </label>
 
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving} className="btn-primary flex-1 disabled:opacity-60">

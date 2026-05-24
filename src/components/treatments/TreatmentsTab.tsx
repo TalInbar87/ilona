@@ -10,12 +10,13 @@ import type { Treatment } from "../../types";
 interface Props {
   patientId: string;
   patientName: string;
+  requiresPayment?: boolean;
   onTreatmentCountChange: () => void;
   autoOpen?: boolean;
   prefill?: TreatmentPrefill;
 }
 
-export function TreatmentsTab({ patientId, patientName, onTreatmentCountChange, autoOpen = false, prefill }: Props) {
+export function TreatmentsTab({ patientId, patientName, requiresPayment = false, onTreatmentCountChange, autoOpen = false, prefill }: Props) {
   const navigate = useNavigate();
   const { data: treatments, loading, refetch } = useTreatments(patientId);
   const [showForm, setShowForm] = useState(autoOpen);
@@ -83,6 +84,7 @@ export function TreatmentsTab({ patientId, patientName, onTreatmentCountChange, 
             <TreatmentRow
               key={t.id}
               treatment={t}
+              requiresPayment={requiresPayment}
               onView={() => navigate(`/patients/${patientId}/treatments/${t.id}`)}
               onEdit={() => setEditTreatment(t)}
             />
@@ -93,6 +95,7 @@ export function TreatmentsTab({ patientId, patientName, onTreatmentCountChange, 
       {(showForm || editTreatment) && (
         <TreatmentFormModal
           patientId={patientId}
+          requiresPayment={requiresPayment}
           treatment={editTreatment ?? undefined}
           prefill={editTreatment ? undefined : prefill}
           onClose={() => { setShowForm(false); setEditTreatment(null); }}
@@ -113,13 +116,19 @@ export function TreatmentsTab({ patientId, patientName, onTreatmentCountChange, 
 
 function TreatmentRow({
   treatment,
+  requiresPayment,
   onView,
   onEdit,
 }: {
   treatment: Treatment;
+  requiresPayment: boolean;
   onView: () => void;
   onEdit: () => void;
 }) {
+  // Only show payment warnings for treatments where the field was explicitly set (not null = old treatment)
+  const showUnpaid = requiresPayment && treatment.payment_received === false;
+  const showNoInvoice = treatment.payment_received === true && treatment.invoice_issued === false;
+
   return (
     <div
       className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:border-sky-200 hover:bg-sky-50 transition-colors group cursor-pointer"
@@ -129,7 +138,19 @@ function TreatmentRow({
         <ClipboardList className="w-5 h-5 text-sky-600" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">{formatDate(treatment.session_date)}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-medium text-gray-900">{formatDate(treatment.session_date)}</p>
+          {showUnpaid && (
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-red-100 text-red-600">
+              טרם שולם
+            </span>
+          )}
+          {showNoInvoice && (
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700">
+              טרם הופקה חשבונית
+            </span>
+          )}
+        </div>
         {treatment.notes && (
           <p className="text-xs text-gray-500 truncate mt-0.5">{treatment.notes}</p>
         )}

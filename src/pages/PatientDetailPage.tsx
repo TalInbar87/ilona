@@ -223,6 +223,7 @@ export function PatientDetailPage() {
             <TreatmentsTab
               patientId={patient.id}
               patientName={patient.full_name}
+              requiresPayment={patient.requires_payment ?? false}
               onTreatmentCountChange={refetch}
               autoOpen={autoOpenTreatment}
               prefill={treatmentPrefill}

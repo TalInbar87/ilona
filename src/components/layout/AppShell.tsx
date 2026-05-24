@@ -10,7 +10,7 @@ import { IdleTimeoutModal } from "./IdleTimeoutModal";
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "ראשי" },
   { to: "/patients", icon: Users, label: "מטופלים" },
-  { to: "/supervisees", icon: GraduationCap, label: "מודרכות" },
+  { to: "/supervisees", icon: GraduationCap, label: "הדרכות" },
   { to: "/calendar", icon: Calendar, label: "לוח שנה" },
   { to: "/goals-bank", icon: BookOpen, label: "בנק מטרות" },
 ];

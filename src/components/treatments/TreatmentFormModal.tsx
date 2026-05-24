@@ -72,6 +72,7 @@ export interface TreatmentPrefill {
 
 interface Props {
   patientId: string;
+  requiresPayment?: boolean;
   treatment?: Treatment;
   prefill?: TreatmentPrefill;
   onClose: () => void;
@@ -83,7 +84,7 @@ interface PendingFile {
   file: File;
 }
 
-export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onSaved }: Props) {
+export function TreatmentFormModal({ patientId, requiresPayment = false, treatment, prefill, onClose, onSaved }: Props) {
   const today = new Date().toISOString().split("T")[0];
 
   const [form, setForm] = useState({
@@ -94,6 +95,9 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
     notes: treatment?.notes ?? "",
     next_ideas: treatment?.next_ideas ?? "",
   });
+
+  const [paymentReceived, setPaymentReceived] = useState<boolean | null>(treatment?.payment_received ?? null);
+  const [invoiceIssued, setInvoiceIssued] = useState<boolean | null>(treatment?.invoice_issued ?? null);
 
   const [goals, setGoals] = useState<LocalGoal[]>([]);
 
@@ -243,6 +247,7 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
       tools: form.tools.trim() || null,
       notes: form.notes.trim() || null,
       next_ideas: form.next_ideas.trim() || null,
+      ...(requiresPayment ? { payment_received: paymentReceived, invoice_issued: invoiceIssued } : {}),
     };
 
     let treatmentId = treatment?.id;
@@ -317,6 +322,20 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
               max="300"
             />
           </div>
+
+          {/* Payment — shown only when patient requires payment */}
+          {requiresPayment && (
+            <div className="space-y-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">האם התקבל תשלום?</label>
+                <YesNoToggle value={paymentReceived} onChange={setPaymentReceived} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">האם הופקה חשבונית?</label>
+                <YesNoToggle value={invoiceIssued} onChange={setInvoiceIssued} />
+              </div>
+            </div>
+          )}
 
           {/* Goals checklist */}
           <div>
@@ -480,6 +499,35 @@ export function TreatmentFormModal({ patientId, treatment, prefill, onClose, onS
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function YesNoToggle({ value, onChange }: { value: boolean | null; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex gap-1.5">
+      <button
+        type="button"
+        onClick={() => onChange(true)}
+        className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+          value === true
+            ? "bg-emerald-500 text-white border-emerald-500"
+            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+        }`}
+      >
+        כן
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange(false)}
+        className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+          value === false
+            ? "bg-red-500 text-white border-red-500"
+            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+        }`}
+      >
+        לא
+      </button>
     </div>
   );
 }
