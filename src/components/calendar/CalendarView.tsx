@@ -268,6 +268,7 @@ export function CalendarView({
           initialStart={supervisionSlot?.start}
           initialEnd={supervisionSlot?.end}
           session={selectedSupervision ?? undefined}
+          requiresPayment={selectedSupervision?.supervisees?.requires_payment ?? false}
           onClose={() => { setSupervisionSlot(null); setSelectedSupervision(null); }}
           onSaved={() => { setSupervisionSlot(null); setSelectedSupervision(null); refetchAll(); }}
         />
