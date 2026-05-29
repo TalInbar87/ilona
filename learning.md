@@ -4,6 +4,55 @@
 
 ---
 
+## 🔒 אבטחה — חוק קבוע (מידע רפואי)
+
+המערכת מכילה מידע רפואי רגיש. **כל** שינוי במבנה הנתונים חייב לעמוד בסטנדרטים הבאים.
+
+### צ'קליסט לכל migration חדש
+
+- [ ] **RLS מופעל** — `ALTER TABLE x ENABLE ROW LEVEL SECURITY` על כל טבלה חדשה
+- [ ] **Policy לפי בעלות משתמש** — `USING (created_by = auth.uid() OR public.is_superuser())`
+- [ ] **לא** `USING (true)` — זה פותח לכל משתמש מחובר
+- [ ] **WITH CHECK** — גם לכתיבה, לא רק לקריאה
+- [ ] **GRANT מוגדר** — `GRANT SELECT/INSERT/UPDATE/DELETE ON x TO authenticated` (לא יותר ממה שצריך)
+- [ ] **service_role key לא בקוד client** — רק anon key בצד הלקוח
+- [ ] **אין raw queries** עם string concatenation — תמיד Supabase SDK / parameterized
+
+### כשטבלה מקושרת ל-patients (ולא ישירות ל-user)
+
+Policy דרך join:
+```sql
+USING (
+  patient_id IN (
+    SELECT id FROM patients WHERE created_by = auth.uid()
+  )
+  OR public.is_superuser()
+)
+```
+
+### דוגמה נכונה לטבלה חדשה
+
+```sql
+CREATE TABLE new_table (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id uuid REFERENCES patients(id) ON DELETE CASCADE,
+  ...
+  created_at timestamptz DEFAULT now(),
+  created_by uuid REFERENCES auth.users(id) DEFAULT auth.uid()
+);
+
+ALTER TABLE new_table ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "user_owns_new_table" ON new_table
+  FOR ALL TO authenticated
+  USING  (created_by = auth.uid() OR public.is_superuser())
+  WITH CHECK (created_by = auth.uid() OR public.is_superuser());
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON new_table TO authenticated;
+```
+
+---
+
 ## Stack
 
 | שכבה | טכנולוגיה |
