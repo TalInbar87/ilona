@@ -1,6 +1,6 @@
 import {
   Document, Packer, Paragraph, TextRun, ImageRun,
-  AlignmentType, convertInchesToTwip, SectionType,
+  AlignmentType, convertInchesToTwip,
 } from "docx";
 
 export type ReportType = "summary" | "continuation";
@@ -19,7 +19,7 @@ export interface ReportData {
   summary: string;
   logoArrayBuffer?: ArrayBuffer;
   signatureArrayBuffer?: ArrayBuffer;
-  logoMime?: string;      // 'image/png' | 'image/jpeg' | 'image/webp'
+  logoMime?: string;
   signatureMime?: string;
 }
 
@@ -42,7 +42,7 @@ function mimeToImageType(mime: string): "png" | "jpg" | "gif" | "bmp" {
   if (mime === "image/jpeg") return "jpg";
   if (mime === "image/gif") return "gif";
   if (mime === "image/bmp") return "bmp";
-  return "png"; // default for webp / unknown — docx may not support webp natively
+  return "png";
 }
 
 function rtlParagraph(text: string, opts?: {
@@ -66,14 +66,14 @@ function rtlParagraph(text: string, opts?: {
   });
 }
 
-function sectionHeading(num: number, title: string): Paragraph {
+function sectionHeading(title: string): Paragraph {
   return new Paragraph({
     bidirectional: RTL,
     alignment: AlignmentType.RIGHT,
     spacing: { before: 220, after: 100 },
     children: [
       new TextRun({
-        text: `${num}. ${title}`,
+        text: title,
         font: FONT,
         bold: true,
         size: SIZE,
@@ -87,7 +87,6 @@ function emptyLine(): Paragraph {
   return new Paragraph({ bidirectional: RTL, spacing: { after: 80 }, children: [] });
 }
 
-/** Split multiline text into paragraphs, preserving empty lines */
 function multilineParagraphs(text: string): Paragraph[] {
   const lines = text.split("\n");
   if (lines.length === 0) return [rtlParagraph("")];
@@ -108,7 +107,6 @@ function multilineParagraphs(text: string): Paragraph[] {
   );
 }
 
-/** Convert ArrayBuffer + mime to a base64 data URL for HTML/PDF output */
 function arrayBufferToDataUrl(buffer: ArrayBuffer, mime: string): string {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -129,10 +127,10 @@ export async function generateReport(data: ReportData): Promise<void> {
     .map((g) => g.trim())
     .filter(Boolean);
 
-  // Build logo paragraph if buffer provided
+  // Logo paragraph
   const logoParagraphs: Paragraph[] = [];
   if (data.logoArrayBuffer) {
-    const logoSize = scaleToMaxWidth(180, 60, 180); // default assumed 180x60
+    const logoSize = scaleToMaxWidth(180, 60, 180);
     logoParagraphs.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,
@@ -148,12 +146,12 @@ export async function generateReport(data: ReportData): Promise<void> {
     );
   }
 
-  // Build signature paragraphs if buffer provided
+  // Signature paragraphs
   const signatureParagraphs: Paragraph[] = [];
   if (data.signatureArrayBuffer) {
-    const sigSize = scaleToMaxWidth(130, 60, 130); // default assumed 130x60
+    const sigSize = scaleToMaxWidth(130, 60, 130);
     signatureParagraphs.push(
-      rtlParagraph("בכבוד רב,"),
+      rtlParagraph("בברכה,"),
       new Paragraph({
         bidirectional: RTL,
         alignment: AlignmentType.RIGHT,
@@ -173,7 +171,6 @@ export async function generateReport(data: ReportData): Promise<void> {
     sections: [
       {
         properties: {
-          type: SectionType.CONTINUOUS,
           page: {
             margin: {
               top: convertInchesToTwip(1),
@@ -184,10 +181,8 @@ export async function generateReport(data: ReportData): Promise<void> {
           },
         },
         children: [
-          // Logo (if present) — before לכבוד
           ...logoParagraphs,
 
-          // Header block
           rtlParagraph(`לכבוד משפחת ${data.familyName}`),
           rtlParagraph(`הנדון: ${subjectLine}`, { bold: true }),
           emptyLine(),
@@ -198,13 +193,11 @@ export async function generateReport(data: ReportData): Promise<void> {
           rtlParagraph(`מס׳ טיפולים: ${data.treatmentCount}`),
           emptyLine(),
 
-          // 1. רקע
-          sectionHeading(1, "רקע"),
+          sectionHeading("רקע"),
           ...multilineParagraphs(data.background),
           emptyLine(),
 
-          // 2. מטרות הטיפול
-          sectionHeading(2, "מטרות הטיפול"),
+          sectionHeading("מטרות"),
           ...(goalLines.length > 0
             ? goalLines.map((goal) =>
                 new Paragraph({
@@ -224,17 +217,14 @@ export async function generateReport(data: ReportData): Promise<void> {
             : [rtlParagraph("")]),
           emptyLine(),
 
-          // 3. תיאור התקדמות
-          sectionHeading(3, "תיאור התקדמות"),
+          sectionHeading("תיאור התקדמות"),
           ...multilineParagraphs(data.progress),
           emptyLine(),
 
-          // 4. סיכום
-          sectionHeading(4, "סיכום"),
+          sectionHeading("סיכום"),
           ...multilineParagraphs(data.summary),
           emptyLine(),
 
-          // Signature (if present) — after סיכום
           ...signatureParagraphs,
         ],
       },
@@ -268,27 +258,27 @@ export function generateReportPDF(data: ReportData): void {
     .filter(Boolean);
 
   const logoHtml = data.logoArrayBuffer && data.logoMime
-    ? `<div style="text-align:center;margin-bottom:16px;">
+    ? `<div class="logo-block">
         <img src="${arrayBufferToDataUrl(data.logoArrayBuffer, data.logoMime)}" style="max-width:180px;height:auto;" />
       </div>`
     : "";
 
   const signatureHtml = data.signatureArrayBuffer && data.signatureMime
-    ? `<div style="text-align:right;margin-top:24px;">
-        <p style="margin:0 0 4px 0;">בכבוד רב,</p>
+    ? `<div class="signature-block">
+        <p>בברכה,</p>
         <img src="${arrayBufferToDataUrl(data.signatureArrayBuffer, data.signatureMime)}" style="max-width:130px;height:auto;" />
       </div>`
     : "";
 
   const goalsHtml =
     goalLines.length > 0
-      ? goalLines.map((g) => `<p style="margin:2px 0;">• ${g}</p>`).join("")
+      ? goalLines.map((g) => `<p>• ${g}</p>`).join("")
       : "<p></p>";
 
   const multilineHtml = (text: string) =>
     text
       .split("\n")
-      .map((line) => `<p style="margin:2px 0;">${line || "&nbsp;"}</p>`)
+      .map((line) => `<p>${line || "&nbsp;"}</p>`)
       .join("");
 
   const html = `<!DOCTYPE html>
@@ -297,25 +287,24 @@ export function generateReportPDF(data: ReportData): void {
   <meta charset="UTF-8" />
   <title>${subjectLine}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Assistant&display=swap');
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: Arial, 'Assistant', sans-serif;
+      font-family: Arial, sans-serif;
       font-size: 11pt;
       direction: rtl;
       text-align: right;
       color: #000;
-      margin: 0;
-      padding: 0;
     }
     @page { margin: 2.5cm; }
-    @media print {
-      body { margin: 0; padding: 0; }
-    }
-    h4 { margin: 18px 0 6px 0; font-size: 11pt; }
-    p { margin: 3px 0; }
-    .header-block { margin-bottom: 16px; }
-    .section { margin-bottom: 14px; }
+    @media print { body { margin: 0; } }
+    p { margin: 3px 0; line-height: 1.5; }
+    .logo-block { text-align: center; margin-bottom: 20px; }
+    .header-block { margin-bottom: 18px; }
+    .header-block p { margin: 2px 0; }
+    .section { margin-bottom: 16px; }
+    .section-title { font-weight: bold; margin-bottom: 6px; margin-top: 18px; }
+    .signature-block { margin-top: 30px; }
+    .signature-block p { margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -333,26 +322,33 @@ export function generateReportPDF(data: ReportData): void {
   </div>
 
   <div class="section">
-    <h4>1. רקע</h4>
+    <div class="section-title">רקע</div>
     ${multilineHtml(data.background)}
   </div>
 
   <div class="section">
-    <h4>2. מטרות הטיפול</h4>
+    <div class="section-title">מטרות</div>
     ${goalsHtml}
   </div>
 
   <div class="section">
-    <h4>3. תיאור התקדמות</h4>
+    <div class="section-title">תיאור התקדמות</div>
     ${multilineHtml(data.progress)}
   </div>
 
   <div class="section">
-    <h4>4. סיכום</h4>
+    <div class="section-title">סיכום</div>
     ${multilineHtml(data.summary)}
   </div>
 
   ${signatureHtml}
+
+  <script>
+    // Wait for all images to load before printing
+    window.addEventListener('load', function() {
+      setTimeout(function() { window.print(); }, 300);
+    });
+  </script>
 </body>
 </html>`;
 
@@ -361,5 +357,4 @@ export function generateReportPDF(data: ReportData): void {
   win.document.write(html);
   win.document.close();
   win.focus();
-  win.print();
 }
