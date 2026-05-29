@@ -59,7 +59,7 @@ export function ReportModal({ patient, reportType, onClose }: Props) {
   }, [loadingGoals, goals]);
 
   const title =
-    reportType === "summary" ? "סיכום טיפול" : "בקשה להמשך טיפול";
+    reportType === "summary" ? "סיכום טיפולי" : "בקשה להמשך טיפול";
 
   const handleGenerate = async () => {
     setGenerating(true);

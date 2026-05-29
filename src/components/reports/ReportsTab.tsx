@@ -14,7 +14,7 @@ export function ReportsTab({ patient }: Props) {
   const cards: { type: ReportType; title: string; description: string; icon: React.ReactNode }[] = [
     {
       type: "summary",
-      title: "סיכום טיפול",
+      title: "סיכום טיפולי",
       description: "מסמך סיכום לסיום מהלך טיפול — כולל רקע, מטרות, התקדמות וסיכום",
       icon: <FileText className="w-6 h-6 text-sky-600" />,
     },

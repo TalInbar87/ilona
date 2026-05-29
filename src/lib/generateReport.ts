@@ -20,24 +20,24 @@ export interface ReportData {
 }
 
 const FONT = "Arial";
+const SIZE = 22;       // 11pt (half-points)
 const RTL = true;
 
 function rtlParagraph(text: string, opts?: {
   bold?: boolean;
-  size?: number;       // half-points (24 = 12pt)
-  heading?: boolean;
+  size?: number;
   spacing?: boolean;
 }): Paragraph {
   return new Paragraph({
     bidirectional: RTL,
     alignment: AlignmentType.RIGHT,
-    spacing: opts?.spacing !== false ? { after: 120 } : { after: 0 },
+    spacing: opts?.spacing !== false ? { after: 100 } : { after: 0 },
     children: [
       new TextRun({
         text,
         font: FONT,
         bold: opts?.bold ?? false,
-        size: opts?.size ?? 24,          // 12pt default
+        size: opts?.size ?? SIZE,
         rightToLeft: RTL,
       }),
     ],
@@ -48,13 +48,13 @@ function sectionHeading(num: number, title: string): Paragraph {
   return new Paragraph({
     bidirectional: RTL,
     alignment: AlignmentType.RIGHT,
-    spacing: { before: 240, after: 120 },
+    spacing: { before: 220, after: 100 },
     children: [
       new TextRun({
         text: `${num}. ${title}`,
         font: FONT,
         bold: true,
-        size: 26,          // 13pt
+        size: SIZE,
         rightToLeft: RTL,
       }),
     ],
@@ -78,7 +78,7 @@ function multilineParagraphs(text: string): Paragraph[] {
         new TextRun({
           text: line || " ",
           font: FONT,
-          size: 24,
+          size: SIZE,
           rightToLeft: RTL,
         }),
       ],
@@ -89,8 +89,8 @@ function multilineParagraphs(text: string): Paragraph[] {
 export async function generateReport(data: ReportData): Promise<void> {
   const subjectLine =
     data.reportType === "summary"
-      ? `דוח סיכום טיפול ק.ת ל-${data.childName}`
-      : `בקשה להמשך טיפול ק.ת ל-${data.childName}`;
+      ? `דו״ח סיכום טיפולי ק.ת ל${data.childName}`
+      : `בקשה להמשך טיפול ק.ת ל${data.childName}`;
 
   const goalLines = data.goals
     .split("\n")
@@ -113,8 +113,8 @@ export async function generateReport(data: ReportData): Promise<void> {
         },
         children: [
           // Header block
-          rtlParagraph(`לכבוד משפחת ${data.familyName}`, { bold: true, size: 26 }),
-          rtlParagraph(`הנדון: ${subjectLine}`, { bold: true, size: 26 }),
+          rtlParagraph(`לכבוד משפחת ${data.familyName}`),
+          rtlParagraph(`הנדון: ${subjectLine}`, { bold: true }),
           emptyLine(),
           rtlParagraph(`שם הילד/ה: ${data.childName}`),
           rtlParagraph(`ת.ז.: ${data.idNumber}`),
@@ -140,7 +140,7 @@ export async function generateReport(data: ReportData): Promise<void> {
                     new TextRun({
                       text: `• ${goal}`,
                       font: FONT,
-                      size: 24,
+                      size: SIZE,
                       rightToLeft: RTL,
                     }),
                   ],
@@ -168,7 +168,7 @@ export async function generateReport(data: ReportData): Promise<void> {
   a.href = url;
   const filename =
     data.reportType === "summary"
-      ? `סיכום_טיפול_${data.childName}.docx`
+      ? `סיכום_טיפולי_${data.childName}.docx`
       : `בקשה_להמשך_טיפול_${data.childName}.docx`;
   a.download = filename;
   document.body.appendChild(a);
