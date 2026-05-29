@@ -193,7 +193,6 @@ export async function generateReport(data: ReportData): Promise<void> {
           rtlParagraph(`מס׳ טיפולים: ${data.treatmentCount}`),
           emptyLine(),
 
-          sectionHeading("רקע"),
           ...multilineParagraphs(data.background),
           emptyLine(),
 
@@ -217,11 +216,9 @@ export async function generateReport(data: ReportData): Promise<void> {
             : [rtlParagraph("")]),
           emptyLine(),
 
-          sectionHeading("תיאור התקדמות"),
           ...multilineParagraphs(data.progress),
           emptyLine(),
 
-          sectionHeading("סיכום"),
           ...multilineParagraphs(data.summary),
           emptyLine(),
 
