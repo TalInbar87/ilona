@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Download, Loader2 } from "lucide-react";
 import { useTreatments } from "../../hooks/useTreatments";
 import { usePatientGoals } from "../../hooks/usePatientGoals";
@@ -13,36 +13,50 @@ interface Props {
 }
 
 export function ReportModal({ patient, reportType, onClose }: Props) {
-  const { data: treatments } = useTreatments(patient.id);
-  const { data: goals } = usePatientGoals(patient.id);
+  const { data: treatments, loading: loadingTreatments } = useTreatments(patient.id);
+  const { data: goals, loading: loadingGoals } = usePatientGoals(patient.id);
 
-  // Extract family name: last word of full_name
   const defaultFamilyName = patient.full_name.split(" ").pop() ?? patient.full_name;
-
-  // Treatment date range
-  const dates = treatments
-    .map((t) => t.session_date)
-    .sort();
-  const dateRange =
-    dates.length > 0
-      ? dates.length === 1
-        ? formatDate(dates[0])
-        : `${formatDate(dates[0])} – ${formatDate(dates[dates.length - 1])}`
-      : "";
-
-  const goalsText = goals.map((g) => g.text).join("\n");
 
   const [form, setForm] = useState({
     familyName: defaultFamilyName,
     childName: patient.full_name,
-    dateRange,
-    treatmentCount: treatments.length.toString(),
+    idNumber: patient.id_number ?? "",
+    dateOfBirth: patient.date_of_birth ? formatDate(patient.date_of_birth) : "",
+    dateRange: "",
+    treatmentCount: "",
     background: "",
-    goals: goalsText,
+    goals: "",
     progress: "",
     summary: "",
   });
   const [generating, setGenerating] = useState(false);
+
+  // Once treatments load, fill date range + count
+  useEffect(() => {
+    if (loadingTreatments) return;
+    const dates = treatments.map((t) => t.session_date).sort();
+    const dateRange =
+      dates.length > 0
+        ? dates.length === 1
+          ? formatDate(dates[0])
+          : `${formatDate(dates[0])} – ${formatDate(dates[dates.length - 1])}`
+        : "";
+    setForm((f) => ({
+      ...f,
+      dateRange,
+      treatmentCount: treatments.length.toString(),
+    }));
+  }, [loadingTreatments, treatments]);
+
+  // Once goals load, fill goals text
+  useEffect(() => {
+    if (loadingGoals) return;
+    setForm((f) => ({
+      ...f,
+      goals: goals.map((g) => g.text).join("\n"),
+    }));
+  }, [loadingGoals, goals]);
 
   const title =
     reportType === "summary" ? "סיכום טיפול" : "בקשה להמשך טיפול";
@@ -81,6 +95,8 @@ export function ReportModal({ patient, reportType, onClose }: Props) {
     </div>
   );
 
+  const isLoading = loadingTreatments || loadingGoals;
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[92vh] flex flex-col">
@@ -102,9 +118,17 @@ export function ReportModal({ patient, reportType, onClose }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field("לכבוד משפחת", "familyName")}
               {field("שם הילד/ה", "childName")}
+              {field("מספר ת.ז.", "idNumber", undefined, "ltr")}
+              {field("תאריך לידה", "dateOfBirth")}
               {field("תאריכי טיפול", "dateRange")}
-              {field("מס׳ טיפולים", "treatmentCount")}
+              {field("מס׳ טיפולים", "treatmentCount", undefined, "ltr")}
             </div>
+            {isLoading && (
+              <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                טוען נתונים...
+              </p>
+            )}
           </div>
 
           {/* Section 1 */}
@@ -165,7 +189,7 @@ export function ReportModal({ patient, reportType, onClose }: Props) {
         <div className="flex gap-3 p-5 border-t border-gray-100 shrink-0">
           <button
             onClick={handleGenerate}
-            disabled={generating}
+            disabled={generating || isLoading}
             className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {generating ? (

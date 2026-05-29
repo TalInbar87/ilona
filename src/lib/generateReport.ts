@@ -9,6 +9,8 @@ export interface ReportData {
   reportType: ReportType;
   familyName: string;
   childName: string;
+  idNumber: string;
+  dateOfBirth: string;
   dateRange: string;
   treatmentCount: string;
   background: string;
@@ -114,6 +116,9 @@ export async function generateReport(data: ReportData): Promise<void> {
           rtlParagraph(`לכבוד משפחת ${data.familyName}`, { bold: true, size: 26 }),
           rtlParagraph(`הנדון: ${subjectLine}`, { bold: true, size: 26 }),
           emptyLine(),
+          rtlParagraph(`שם הילד/ה: ${data.childName}`),
+          rtlParagraph(`ת.ז.: ${data.idNumber}`),
+          rtlParagraph(`תאריך לידה: ${data.dateOfBirth}`),
           rtlParagraph(`תאריכי טיפול: ${data.dateRange}`),
           rtlParagraph(`מס׳ טיפולים: ${data.treatmentCount}`),
           emptyLine(),
