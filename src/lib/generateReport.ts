@@ -90,7 +90,7 @@ export async function generateReport(data: ReportData): Promise<void> {
   const subjectLine =
     data.reportType === "summary"
       ? `דו״ח סיכום טיפולי ק.ת ל${data.childName}`
-      : `בקשה להמשך טיפול ק.ת ל${data.childName}`;
+      : `דו״ח בקשה להמשך טיפולי ק.ת ל${data.childName}`;
 
   const goalLines = data.goals
     .split("\n")
