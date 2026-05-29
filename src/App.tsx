@@ -15,6 +15,7 @@ import { GoalsBankPage } from "./pages/GoalsBankPage";
 import { TodosPage } from "./pages/TodosPage";
 import { UsersPage } from "./pages/UsersPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
+import { ProfilePage } from "./pages/ProfilePage";
 
 export default function App() {
   const init = useAuthStore((s) => s.init);
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="goals-bank" element={<GoalsBankPage />} />
           <Route path="todos" element={<TodosPage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

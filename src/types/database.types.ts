@@ -517,6 +517,8 @@ export type Database = {
           created_at: string;
           first_name: string | null;
           last_name: string | null;
+          signature_path: string | null;
+          logo_path: string | null;
         };
         Insert: {
           id: string;
@@ -524,11 +526,15 @@ export type Database = {
           created_at?: string;
           first_name?: string | null;
           last_name?: string | null;
+          signature_path?: string | null;
+          logo_path?: string | null;
         };
         Update: {
           is_superuser?: boolean;
           first_name?: string | null;
           last_name?: string | null;
+          signature_path?: string | null;
+          logo_path?: string | null;
         };
         Relationships: [];
       };

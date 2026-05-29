@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen, ShieldCheck, Pencil, Check, CheckSquare } from "lucide-react";
+import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen, ShieldCheck, Pencil, Check, CheckSquare, User } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabase";
 import { cn } from "../../lib/utils";
@@ -14,6 +14,7 @@ const navItems = [
   { to: "/calendar", icon: Calendar, label: "לוח שנה" },
   { to: "/todos", icon: CheckSquare, label: "משימות" },
   { to: "/goals-bank", icon: BookOpen, label: "בנק מטרות" },
+  { to: "/profile", icon: User, label: "המשתמש שלי" },
 ];
 
 export function AppShell() {
@@ -23,6 +24,7 @@ export function AppShell() {
   const superuserLoading = useAuthStore((s) => s.superuserLoading);
   const firstName = useAuthStore((s) => s.firstName);
   const lastName = useAuthStore((s) => s.lastName);
+  const logoUrl = useAuthStore((s) => s.logoUrl);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -61,8 +63,12 @@ export function AppShell() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-5 border-b border-gray-100">
-        <div className="w-9 h-9 bg-sky-600 rounded-lg flex items-center justify-center">
-          <Stethoscope className="w-5 h-5 text-white" />
+        <div className="w-9 h-9 bg-sky-600 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+          {logoUrl ? (
+            <img src={logoUrl} alt="לוגו" className="w-9 h-9 rounded-lg object-cover" />
+          ) : (
+            <Stethoscope className="w-5 h-5 text-white" />
+          )}
         </div>
         <div>
           <p className="text-sm font-bold text-gray-900">מערכת ניהול</p>
@@ -192,8 +198,12 @@ export function AppShell() {
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 right-0 left-0 h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 z-40 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-sky-600 rounded-lg flex items-center justify-center">
-            <Stethoscope className="w-4 h-4 text-white" />
+          <div className="w-7 h-7 bg-sky-600 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+            {logoUrl ? (
+              <img src={logoUrl} alt="לוגו" className="w-7 h-7 rounded-lg object-cover" />
+            ) : (
+              <Stethoscope className="w-4 h-4 text-white" />
+            )}
           </div>
           <p className="text-sm font-bold text-gray-900">מערכת ניהול</p>
         </div>
