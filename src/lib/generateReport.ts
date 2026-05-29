@@ -322,7 +322,6 @@ export function generateReportPDF(data: ReportData): void {
   </div>
 
   <div class="section">
-    <div class="section-title">רקע</div>
     ${multilineHtml(data.background)}
   </div>
 
@@ -332,12 +331,10 @@ export function generateReportPDF(data: ReportData): void {
   </div>
 
   <div class="section">
-    <div class="section-title">תיאור התקדמות</div>
     ${multilineHtml(data.progress)}
   </div>
 
   <div class="section">
-    <div class="section-title">סיכום</div>
     ${multilineHtml(data.summary)}
   </div>
 
