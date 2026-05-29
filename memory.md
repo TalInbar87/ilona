@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-05-29 (המשך — אבטחה)
+
+### migration-v28 — תיקון RLS על hearing_tests ✅ רץ
+
+- `hearing_tests` הייתה עם `authenticated_all` (USING true) — כל משתמש מחובר ראה את כל הבדיקות
+- תוקן ל-`user_owns_hearing_tests` — מגביל לפי בעלות על המטופל (`patient_id IN SELECT FROM patients WHERE created_by = auth.uid()`)
+- נבדק שאין מטופלים עם `created_by = NULL` — אין, המיגרציה רצה בבטחה
+
+---
+
 ## 2026-05-29
 
 ### דוחות — טאב חדש בדף מטופל
