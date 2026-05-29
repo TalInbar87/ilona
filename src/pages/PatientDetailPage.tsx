@@ -22,9 +22,10 @@ import { HearingTestsTab } from "../components/hearingTests/HearingTestsTab";
 import { TreatmentsTab } from "../components/treatments/TreatmentsTab";
 import { PatientGoalsTab } from "../components/goals/PatientGoalsTab";
 import { PatientFilesSection } from "../components/patients/PatientFilesSection";
+import { ReportsTab } from "../components/reports/ReportsTab";
 import type { TreatmentPrefill } from "../components/treatments/TreatmentFormModal";
 
-type Tab = "details" | "hearing" | "diagnoses" | "treatments" | "goals";
+type Tab = "details" | "hearing" | "diagnoses" | "treatments" | "goals" | "reports";
 
 export function PatientDetailPage() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -89,6 +90,7 @@ export function PatientDetailPage() {
     { id: "diagnoses" as Tab,  label: "אבחונים" },
     { id: "treatments" as Tab, label: "תיק טיפול" },
     { id: "goals" as Tab,      label: "מטרות" },
+    { id: "reports" as Tab,    label: "דוחות" },
   ];
 
   return (
@@ -239,6 +241,9 @@ export function PatientDetailPage() {
           )}
           {activeTab === "goals" && (
             <PatientGoalsTab patientId={patient.id} />
+          )}
+          {activeTab === "reports" && (
+            <ReportsTab patient={patient} />
           )}
         </div>
       </div>

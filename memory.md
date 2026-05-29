@@ -4,6 +4,36 @@
 
 ---
 
+## 2026-05-29
+
+### דוחות — טאב חדש בדף מטופל
+
+**פיצ'ר חדש — "דוחות" בדף מטופל:**
+
+נוצרו 3 קבצים / עודכנו:
+
+1. **`src/lib/generateReport.ts`** (חדש)
+   - ספריית `docx` v9.7.1 לייצור מסמך Word עם RTL עברי
+   - `generateReport(data: ReportData)` → יוצר Document + Packer.toBlob + הורדה אוטומטית
+   - Helper functions: `rtlParagraph`, `sectionHeading`, `multilineParagraphs`, `emptyLine`
+   - שני סוגי דוחות: `"summary"` / `"continuation"`
+
+2. **`src/components/reports/ReportModal.tsx`** (חדש)
+   - מודל טופס עם כל שדות הדוח: כותרת, רקע, מטרות, התקדמות, סיכום
+   - Pre-fill אוטומטי: שם משפחה, שם ילד/ה, טווח תאריכים מטיפולים, מספר טיפולים, מטרות
+   - כפתור "הפק מסמך Word" → מוריד .docx
+
+3. **`src/components/reports/ReportsTab.tsx`** (חדש)
+   - שני כרטיסים: "סיכום טיפול" ו-"בקשה להמשך טיפול"
+   - לחיצה → פותח `ReportModal` עם סוג הדוח המתאים
+
+4. **`src/pages/PatientDetailPage.tsx`** (עודכן)
+   - הוסף `import { ReportsTab }`
+   - הוסף `"reports"` ל-`Tab` type וה-tabs array
+   - הוסף `{activeTab === "reports" && <ReportsTab patient={patient} />}`
+
+---
+
 ## 2026-05-27
 
 ### נושאים שנדונו — לא יושמו
