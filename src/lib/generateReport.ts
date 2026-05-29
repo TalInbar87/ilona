@@ -1,7 +1,6 @@
 import {
   Document, Packer, Paragraph, TextRun,
-  AlignmentType, HeadingLevel, LevelFormat,
-  convertInchesToTwip, SectionType,
+  AlignmentType, convertInchesToTwip, SectionType,
 } from "docx";
 
 export type ReportType = "summary" | "continuation";
