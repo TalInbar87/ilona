@@ -134,7 +134,7 @@ export function ProfilePage() {
         <div className="flex items-start gap-2.5 p-3.5 bg-sky-50 border border-sky-200 rounded-lg">
           <ImageIcon className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
           <p className="text-sm text-sky-800 leading-relaxed">
-            לתצוגה מיטבית מומלץ להעלות תמונה <strong>רחבה ונמוכה</strong> (יחס רוחב-גובה של כ-3:1 עד 4:1), לדוגמה 400×100 פיקסלים. תמונות מרובעות או גבוהות עלולות להיחתך בסרגל.
+            הלוגו יוצג בגודלו הטבעי בסרגל. לתצוגה חדה מומלץ להעלות תמונה ברזולוציה גבוהה (לפחות 300×300 פיקסלים). PNG עם רקע שקוף עובד הכי טוב.
           </p>
         </div>
 
