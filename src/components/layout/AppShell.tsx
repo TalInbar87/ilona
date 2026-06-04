@@ -199,6 +199,9 @@ export function AppShell() {
 
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 right-0 left-0 h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 z-40 shadow-sm">
+        <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
+          <Menu className="w-5 h-5 text-gray-600" />
+        </button>
         <div className="flex items-center gap-2">
           {logoUrl ? (
             <img src={logoUrl} alt="לוגו" className="max-h-8 max-w-[120px] object-contain" />
@@ -211,9 +214,6 @@ export function AppShell() {
             </>
           )}
         </div>
-        <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
-          <Menu className="w-5 h-5 text-gray-600" />
-        </button>
       </div>
 
       {/* Mobile drawer overlay */}
