@@ -101,7 +101,7 @@ interface Props {
 
 export function CalendarView({
   height = isMobile ? "calc(100dvh - 200px)" : "calc(100vh - 200px)",
-  initialView = isMobile ? "timeGridDay" : "timeGridWeek",
+  initialView = isMobile ? "timeGridDay" : "timeGridWeek", // שבוע ברירת מחדל
 }: Props) {
   const navigate = useNavigate();
   const [range, setRange] = useState<{ start: string; end: string } | null>(null);
@@ -232,9 +232,21 @@ export function CalendarView({
 
       {pickerSlot && (
         <EventTypePicker
-          onPickAppointment={() => { setSelectedSlot(pickerSlot); setPickerSlot(null); }}
-          onPickMeeting={() => { setMeetingSlot(pickerSlot); setPickerSlot(null); }}
-          onPickSupervision={() => { setSupervisionSlot(pickerSlot); setPickerSlot(null); }}
+          onPickAppointment={() => {
+            const end = new Date(pickerSlot.start.getTime() + 45 * 60000);
+            setSelectedSlot({ start: pickerSlot.start, end });
+            setPickerSlot(null);
+          }}
+          onPickMeeting={() => {
+            const end = new Date(pickerSlot.start.getTime() + 45 * 60000);
+            setMeetingSlot({ start: pickerSlot.start, end });
+            setPickerSlot(null);
+          }}
+          onPickSupervision={() => {
+            const end = new Date(pickerSlot.start.getTime() + 60 * 60000);
+            setSupervisionSlot({ start: pickerSlot.start, end });
+            setPickerSlot(null);
+          }}
           onClose={() => setPickerSlot(null)}
         />
       )}

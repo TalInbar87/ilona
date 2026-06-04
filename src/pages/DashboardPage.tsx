@@ -171,7 +171,7 @@ export function DashboardPage() {
               <p className="text-sm">אין טיפולים או פגישות מתוכננים להיום</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-72 overflow-y-auto">
               {todayItems.map((item) =>
                 item.kind === "appointment" ? (
                   <div
