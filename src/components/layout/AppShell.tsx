@@ -63,8 +63,8 @@ export function AppShell() {
     <>
       {/* Logo */}
       {logoUrl ? (
-        <div className="flex items-center justify-center px-5 py-4 border-b border-gray-100">
-          <img src={logoUrl} alt="לוגו" className="max-h-16 max-w-full object-contain" />
+        <div className="flex items-center justify-center border-b border-gray-100">
+          <img src={logoUrl} alt="לוגו" className="max-w-full object-contain" />
         </div>
       ) : (
         <div className="flex items-center gap-2 px-4 py-5 border-b border-gray-100">
