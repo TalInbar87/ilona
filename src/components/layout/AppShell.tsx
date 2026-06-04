@@ -220,8 +220,8 @@ export function AppShell() {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-64 bg-white h-full flex flex-col shadow-xl mr-auto">
-            <button onClick={() => setMobileOpen(false)} className="absolute top-4 left-4 p-1.5 hover:bg-gray-100 rounded-lg">
+          <aside className="relative w-64 bg-white h-full flex flex-col shadow-xl ml-auto">
+            <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 p-1.5 hover:bg-gray-100 rounded-lg">
               <X className="w-5 h-5 text-gray-500" />
             </button>
             <SidebarContent />
