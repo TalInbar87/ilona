@@ -54,7 +54,7 @@ export function DashboardPage() {
 
     const fetchAll = async () => {
       const [{ count: pCount }, { count: tMonthCount }, { count: sMonthCount }] = await Promise.all([
-        supabase.from("patients").select("*", { count: "exact", head: true }),
+        supabase.from("patients").select("*", { count: "exact", head: true }).is("archived_at", null),
         supabase
           .from("treatments")
           .select("*", { count: "exact", head: true })
@@ -147,7 +147,7 @@ export function DashboardPage() {
         <StatCard
           icon={<Users className="w-5 h-5 md:w-6 md:h-6 text-sky-600" />}
           bg="bg-sky-50"
-          label="מטופלים"
+          label="מטופלים פעילים"
           value={loading ? "—" : stats.patients.toString()}
           onClick={() => navigate("/patients")}
         />
