@@ -16,6 +16,7 @@ import { TodosPage } from "./pages/TodosPage";
 import { UsersPage } from "./pages/UsersPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { DiagnosticsPocPage } from "./pages/DiagnosticsPocPage";
 
 export default function App() {
   const init = useAuthStore((s) => s.init);
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="supervisees" element={<SuperviseesPage />} />
           <Route path="supervisees/:superviseeId" element={<SuperviseeDetailPage />} />
           <Route path="calendar" element={<CalendarPage />} />
+          <Route path="diagnostics" element={<DiagnosticsPocPage />} />
           <Route path="goals-bank" element={<GoalsBankPage />} />
           <Route path="todos" element={<TodosPage />} />
           <Route path="profile" element={<ProfilePage />} />

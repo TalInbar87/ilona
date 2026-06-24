@@ -112,6 +112,7 @@ src/
 /patients/:id/treatments/:id → TreatmentDetailPage
 /supervisees               → SuperviseesPage
 /supervisees/:id           → SuperviseeDetailPage
+/diagnostics               → DiagnosticsPocPage  (POC כתיבה בעט — וקטור, לא בשימוש production)
 /calendar                  → CalendarPage
 /goals-bank                → GoalsBankPage
 /users                     → UsersPage  (superuser בלבד)

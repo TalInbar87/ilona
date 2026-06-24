@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-06-24 — אבחונים (POC כתיבה בעט)
+
+### דשבורד + מובייל (תוקן והועלה)
+- תכנון יומי כולל עכשיו `supervision_sessions` (היו חסרים) — שאילתה שלישית ב-`fetchToday`, סוג `supervision` ב-`DayItem`
+- קובייות סטטיסטיקה: `grid-cols-2 md:grid-cols-3`, קובייית הדרכות `col-span-2 md:col-span-1`
+- גלילה אופקית במובייל תוקנה — `overflow-x-hidden` על `<main>` ב-AppShell
+- לוגו בסיידבר: מוצג בגודל טבעי ללא padding/max-height כשקיים; fallback סטטוסקופ כשאין
+- כפתור המבורגר + drawer עברו לימין (RTL): `ml-auto`, כפתור סגירה `right-4`
+- דשבורד "מטופלים" → "מטופלים פעילים" + סינון `archived_at IS NULL`
+- ProfilePage: הערת המלצה ללוגו (רזולוציה גבוהה, PNG שקוף)
+
+### אבחונים — POC כתיבה ידנית בעט (חדש, לא בשימוש production עדיין)
+
+**החלטות מוצר (מהמשתמש):**
+- טפסים **לא** מקושרים למטופל קיים. בסוף האבחון תהיה שאלה "להוסיף מטופל?" → אם כן נפתח כרטיס
+- שמירה כ-**JSON** בלחיצה → הצגה כ-PDF
+- **Canvas** (כתב יד כוקטור), **לא** המרת טקסט — המרת עברית של Apple Scribble עדיין לא מספיק טובה
+- חיפוש לפי תוכן — לא נדרש
+- מטרת ה-POC: לוודא שאפשר לכתוב עברית בהרבה שדות + שמירה קומפקטית (לא תמונה כבדה)
+
+**הפתרון — שמירת strokes כוקטור (לא PNG):**
+- `src/lib/handwriting.ts` — טיפוסים + רינדור + סריאליזציה. נקודה = `[x, y, pressure]`. עיגול x/y לעשירית, pressure לשתי ספרות → JSON קומפקטי (~KB בודדים לשדה לעומת עשרות KB ל-PNG)
+- `src/components/handwriting/HandwritingCanvas.tsx` — שדה כתיבה. PointerEvent עם pressure (Apple Pencil), palm rejection (pen-only אחרי זיהוי עט), getCoalescedEvents לקווים חלקים, DPI-aware, undo/clear, מד נפח חי
+- `src/lib/generateDiagnosticPdf.ts` — בונה HTML עם שדות יבשים כטקסט + handwriting כ-PNG (rasterize ב-2x), window.print פטרן (כמו generateReport)
+- `src/pages/DiagnosticsPocPage.tsx` — דף POC: שדות יבשים (מקלדת) + 4 סקשני כתיבה + שמור JSON + ייצא PDF + מד נפח כולל
+- route `/diagnostics` + nav item "אבחונים" (icon ClipboardList)
+
+**סטטוס:** POC בלבד — אין טבלת DB, אין שמירה ל-Supabase עדיין. המשתמש יבדוק על iPad עם Apple Pencil, ויעלה אח"כ את הטפסים האמיתיים. **לכשייושם production:** צריך migration לטבלת `assessments` (JSON column) עם RLS לפי `created_by` (ראה צ'קליסט ב-learning.md).
+
+---
+
 ## 2026-05-29 (המשך — אבטחה)
 
 ### migration-v28 — תיקון RLS על hearing_tests ✅ רץ
