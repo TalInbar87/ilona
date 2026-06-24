@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen, ShieldCheck, Pencil, Check, CheckSquare, User, ClipboardList } from "lucide-react";
+import { Users, Calendar, LayoutDashboard, LogOut, Stethoscope, GraduationCap, Menu, X, BookOpen, ShieldCheck, Pencil, Check, CheckSquare, User } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabase";
 import { cn } from "../../lib/utils";
@@ -11,7 +11,6 @@ const navItems = [
   { to: "/", icon: LayoutDashboard, label: "ראשי" },
   { to: "/patients", icon: Users, label: "מטופלים" },
   { to: "/supervisees", icon: GraduationCap, label: "הדרכות" },
-  { to: "/diagnostics", icon: ClipboardList, label: "אבחונים" },
   { to: "/calendar", icon: Calendar, label: "לוח שנה" },
   { to: "/todos", icon: CheckSquare, label: "משימות" },
   { to: "/goals-bank", icon: BookOpen, label: "בנק מטרות" },

@@ -24,7 +24,21 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(npx tsc *)",
       "Bash(supabase --version)",
-      "Bash(supabase functions *)"
+      "Bash(supabase functions *)",
+      "Bash(head -370 /Users/talinbar/Documents/Ilona/src/components/diagnoses/DiagnosesTab.tsx)",
+      "Bash(mv /tmp/diagnoses_trimmed.tsx /Users/talinbar/Documents/Ilona/src/components/diagnoses/DiagnosesTab.tsx)",
+      "Bash(git reset *)",
+      "Bash(git commit *)",
+      "Bash(git rm *)",
+      "Bash(npx vercel *)",
+      "Bash(npm ls *)",
+      "Bash(chmod +x /Users/talinbar/Documents/Ilona/.git/hooks/pre-commit)",
+      "Bash(echo \"EXIT:$?\")",
+      "WebFetch(domain:www.gov.il)",
+      "WebFetch(domain:www.y-law.co.il)",
+      "WebFetch(domain:eshimony-law.co.il)",
+      "Bash(git config *)",
+      "Bash(gh auth *)"
     ]
   }
 }
